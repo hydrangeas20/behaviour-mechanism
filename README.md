@@ -185,6 +185,11 @@ behaviour-mechanism/
 The full experimental design, measurement methodology, results, controls, robustness analyses, limitations, and proposed follow-up experiments are documented in the [**preprint**](paper/behaviour_mechanism_preprint.pdf).
 
 The preprint is also archived on **Zenodo**, providing a persistent, citable record of this work: **[Zenodo preprint](https://doi.org/10.5281/zenodo.22602752)**.
-## Reference
 
-This study builds on the induction-head work of Olsson et al. (2022), *In-context Learning and Induction Heads*, Transformer Circuits Thread.
+## References
+
+This study builds on prior work on induction heads and causal interventions in transformer internals, particularly:
+
+- Olsson et al. (2022), *In-context Learning and Induction Heads*.
+- Meng et al. (2022), *Locating and Editing Factual Associations in GPT*.
+- Vig et al. (2020), *Causal Mediation Analysis for Interpreting Neural NLP: The Case of Gender Bias*.
