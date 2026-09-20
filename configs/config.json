@@ -1,0 +1,29 @@
+{
+  "vocab_size": 100,
+  "d_model": 128,
+  "n_layers": 4,
+  "n_heads": 4,
+  "d_ff": 512,
+  "max_seq_len": 64,
+  "dropout_rate": 0.0,
+  "seq_len": 64,
+  "batch_size": 64,
+  "induction_gap_min": 2,
+  "induction_gap_max": 40,
+  "frac_induction_sequences": 0.7,
+  "learning_rate": 0.0003,
+  "weight_decay": 0.01,
+  "warmup_steps": 100,
+  "total_steps": 8000,
+  "dense_ckpt_every": 50,
+  "dense_ckpt_until": 1500,
+  "sparse_ckpt_every": 500,
+  "seeds": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "eval_batches": 8,
+  "eval_batch_size": 64
+}

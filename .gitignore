@@ -1,0 +1,11 @@
+# Large training artifacts
+checkpoints/
+*.pkl
+
+# Notebook / Python runtime files
+.ipynb_checkpoints/
+__pycache__/
+*.py[cod]
+
+# OS files
+.DS_Store
