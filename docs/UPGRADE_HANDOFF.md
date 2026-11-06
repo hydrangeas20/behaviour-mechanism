@@ -116,7 +116,7 @@ Flax 0.12.12, Optax 0.2.8):
 | `bm verify-artifacts --strict` | all 3 consistency checks true; variance rule reproduces T_b = 0, T_m = 2000 |
 | `bm figures`, `bm diagnostics-report` | ok |
 | `bm diagnose …` × 5 (see `artifacts/logs/diagnostics.log`, not committed) | all complete: main s0 1,092 s, main s1 1,139 s, 64/2 s0 306 s, 64/2 s1 304 s, negative control s0 721 s |
-| GitHub Actions | run 42151304796 (pull_request, head `ff89007`): `cpu (3.12)` and `cpu (3.13)` both succeeded. Draft PR #1 |
+| GitHub Actions | first pass: run 42151304796 (head `ff89007`); follow-up: run 42166127956 (head `b837c23`). Both runs: `cpu (3.12)` and `cpu (3.13)` succeeded. Draft PR #1 |
 
 **Skipped / not run**
 - GPU runs.
@@ -255,7 +255,7 @@ trained models exceed it.
 - Match-cue corruptions become defined only at gating, and then show the attention-gated
   signature.
 - Downstream necessity keeps growing after gating: layer-2 attention disruption reaches
-  0.62 (seed 0) and 0.91 (seed 1), while the gap changes by about 0.3 nats.
+  0.62 (seed 0) and 0.91 (seed 1), while the query-token gap changes by only 0.15–0.3 nats.
 
 **Interpretation update.**
 - The revised account is supported, not contradicted.
