@@ -1,5 +1,14 @@
 # Research roadmap
 
+**Status (2026-11-06).**
+
+- **E4:** done.
+- **E3:** done for 2 seeds (see audit §J).
+- **E1:** infrastructure implemented and tested. The pre-registration is drafted in
+  [E1_PREREGISTRATION.md](E1_PREREGISTRATION.md). The 8-seed run has **not** been run and
+  awaits approval.
+- **E2, E5, E6:** not started.
+
 None of the experiments below has been run unless it says so. "CPU diagnostic" means the
 small re-runs in `results/diagnostics/` (see [RESEARCH_AUDIT.md](RESEARCH_AUDIT.md) §C).
 
@@ -23,10 +32,10 @@ GPU estimates are **unverified**.
 
 | Priority | Experiment | Cost (CPU, measured basis) | Changes the conclusion if… |
 |---|---|---|---|
-| 1 | E1: pre-registered re-measurement, 8 seeds | ~8 × 25 min to step 3,000 | patching transitions do **not** line up with the gating transitions |
+| 1 | E1: pre-registered re-measurement, 8 seeds (now includes E3 controls at every checkpoint) | about 22–25 min per seed (measured components), about 3–3.5 h total | patching transitions do **not** line up with the gating transitions |
 | 2 | E2: offset-randomised task | ~8 × 45 min (8,000 steps) | separation survives when only token matching works |
-| 3 | E3: corruption and intervention controls | minutes per checkpoint set | recovery depends on corruption choice |
-| 4 | E4: constructed-weights positive control | < 1 h, no training | the probe misreports a known mechanism |
+| — | E3: corruption and intervention controls | **done, 2 seeds**: about 20 min to train checkpoints, about 2 min of controls per seed | — |
+| — | E4: constructed-weights positive control | **done**: under 1 min | — |
 | 5 | E5: 64/2 factorial (width × depth) | ~4 × 2 × 6 min | only after E1, using decomposed metrics |
 | 6 | E6: patching on the real-text models | GPU recommended | low priority until E1–E4 are done |
 
@@ -45,11 +54,16 @@ GPU estimates are **unverified**.
 3. **Competing explanations.** A genuine reorganisation of the copying computation after
    behaviour saturates. If so, conditional recovery changes while the defined fraction is
    already 1.
-4. **Design.** The historical config, unchanged. Use `bm diagnose` for seeds 0–7 with
-   `--n-large 128` and a **fixed** pair set reused at every checkpoint (add
-   `--fixed-pairs`; not yet implemented). Add checkpoints every 50 steps from 1,500 to
-   2,500, so the historical gap in the checkpoint grid is closed. That changes only the
-   checkpoint list, not the training trajectory.
+4. **Design.** The historical config, unchanged. Exact commands and decision rules are in
+   [E1_PREREGISTRATION.md](E1_PREREGISTRATION.md) (draft).
+   - `--fixed-pairs 128`: one fixed pair set reused at every checkpoint. Implemented;
+     `test_fixed_pair_records_match_historical_per_pair_code`.
+   - `--control-pairs 64`: E3 at every checkpoint. Implemented.
+   - `--extra-steps 1550:2500:50`: closes the checkpoint gap without changing the training
+     RNG. Implemented; `test_extra_checkpoints_do_not_change_the_trajectory`, plus a
+     main-config smoke run that reproduced the historical step 0/50/100 values.
+   - **Still to add before freezing:** a pair bootstrap for within-checkpoint
+     uncertainty.
 5. **Model and task.** As historical (4L/4H, d = 128, fixed-offset repeats).
 6. **Baselines.** The historical statistic, recomputed with the historical RNG. The CPU
    diagnostic reproduces it exactly while CPU and GPU trajectories agree.
@@ -113,7 +127,17 @@ GPU estimates are **unverified**.
     matches its "induction" framing.
 13. **Limitations.** Synthetic task; offset distribution chosen by the experimenter.
 
-## E3. Corruption and intervention controls (cheap; existing infrastructure)
+## E3. Corruption and intervention controls — DONE for seeds 0 and 1 (audit §J.2)
+
+Results, in brief:
+- The copy-source corruption is defined throughout. Its layer-0 attention recovery and
+  disruption are 1.00 at every checkpoint.
+- Match-cue corruptions become defined only at gating. They then show the
+  attention-gated signature.
+- Downstream necessity (layer-2 attention and MLPs) keeps rising after gating.
+
+What remains: more seeds and denser checkpoints (inside E1), and per-head sites. The
+original design notes follow.
 
 - **Corruptions.**
   - (a) the historical one: random second half;
@@ -132,7 +156,10 @@ GPU estimates are **unverified**.
 - **Success criterion.** A causal claim about "layer 0 implements the behaviour" is kept
   only if it holds under at least 3 corruptions.
 
-## E4. Constructed-weights positive control
+## E4. Constructed-weights positive control — DONE (audit §J.1)
+
+Result: the probe returns the hand-derived values on all three copiers, and it reports
+**0 for an MLP-gated copier**, a blind spot. The original design notes follow.
 
 Hand-set two models and check what the probe reports on each:
 - a pure positional copier (layer-0 head attending `half − 1` back);

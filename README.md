@@ -10,11 +10,19 @@ contains the original experiment (a JAX/Flax notebook, checkpoint-level CSVs, a
 preprint), an audit of what those artifacts do and do not establish, a tested Python
 package that reproduces the measurement pipeline, and CPU diagnostic re-runs.
 
-> **Status (November 2026).** The audit ([`docs/RESEARCH_AUDIT.md`](docs/RESEARCH_AUDIT.md))
-> substantially revises the original interpretation. The historical numbers are
-> reproduced, but they do not show that a *mechanistic* measurement stabilises later than
-> behaviour. They are better explained by two behavioural transitions on two different
-> input distributions. The preprint (September 2026) predates this audit.
+> **The original interpretation has been revised (November 2026 audit).**
+> The September 2026 preprint and the original notebook are kept unchanged as historical
+> records. Their numbers reproduce, but they do not show that a *mechanistic* measurement
+> stabilises later than behaviour.
+>
+> The audit ([`docs/RESEARCH_AUDIT.md`](docs/RESEARCH_AUDIT.md)) finds a better-supported
+> account: two behavioural transitions on two different input distributions, with the
+> historical patching statistic tracking the second. Follow-up controls (E3, E4) support
+> this account but do not establish it definitively. They also show that internal
+> changes continue after the second transition, which the historical statistic cannot see.
+> A proposed correction to the preprint is in
+> [`docs/PROPOSED_CORRECTION.md`](docs/PROPOSED_CORRECTION.md). It is a draft and has
+> not been published.
 
 ## Research question
 
@@ -55,7 +63,8 @@ The exact configuration is [`configs/config.json`](configs/config.json). It hash
 
 ## Verified findings
 
-Every item is recomputed by `bm verify-artifacts` or measured in `results/diagnostics/`.
+Every item is recomputed by `bm verify-artifacts` or measured in `results/diagnostics/` or
+`results/controls/`.
 Details and evidence paths are in the audit.
 
 1. **The historical numbers reproduce.**
@@ -102,6 +111,38 @@ Details and evidence paths are in the audit.
    - A loss-based behavioural metric would therefore have "stabilised" at the same time as
      the patching statistic.
 
+6. **Constructed-weights control (E4): the probe reads known mechanisms as designed,
+   and it has a blind spot.** I hand-set three copiers in the historical architecture.
+   The historical probe reports the values derived by hand:
+   - an *ungated* copier: undefined, recorded as 0, with 0/64 pairs defined;
+   - an *attention-gated* copier: 1.0;
+   - an *MLP-gated* copier: **0.0 with every pair defined**. The probe misses a fully
+     gated copier when the gate is computed outside attention.
+   - The ungated copier scores 1.000 on the behavioural metric. Both gated copiers score
+     exactly 31/32, the token-matching bound used in finding 2.
+7. **Corruption and intervention controls (E3, seeds 0 and 1, 128 pairs per corruption):**
+   - A corruption that changes only the *copied* token (position 1) is defined at every
+     checkpoint. Layer-0 attention fully restores it (recovery 1.00) and fully destroys
+     it (disruption 1.00) from step 300 to 3,000 in both seeds. The copying pathway is
+     measurable and unchanged through the period in which the historical statistic reads 0.
+   - Corruptions of the match cue (the query token, or the earlier occurrence) are defined
+     only once gating appears: steps 1,200–1,300 for seed 0 and 1,500–2,000 for seed 1.
+     After that, layer-0 attention restores them fully. That is the attention-gated
+     signature from E4, not the MLP-gated one.
+   - **The gate is not only a layer-0 attention mechanism.** Inserting corrupted
+     activations from later components disrupts it more and more as training continues.
+     For the query-token corruption, layer-2 attention disruption rises from ≤ 0.17
+     before gating to 0.62 (seed 0, step 3,000) and 0.91 (seed 1, step 2,500); layer-2 MLP disruption
+     rises from 0.15–0.30 to 0.69–0.81. Over the same steps the behavioural gap grows
+     only modestly (seed 0: 4.05 → 4.35 nats).
+
+<p align="center">
+  <img src="figures/derived/e3_controls.png" width="600"
+       alt="E3 controls: copy-source recovery, query-token defined fraction and recovery, layer-2 disruption">
+</p>
+
+*E3 controls on saved checkpoints of the CPU re-runs (`results/controls/`).*
+
 <p align="center">
   <img src="figures/derived/historical_trajectories.png" width="640"
        alt="Historical accuracy, patching statistic and raw loss for four seeds">
@@ -130,12 +171,24 @@ decomposed, the evidence supports a different account:
 
 The behavioural metric (argmax accuracy on clean repeats) sees only step 1. The
 patching statistic is undefined until step 2 has happened, because the probe's corrupted
-input *is* a non-repeating sequence. Layer-0 patching recovers most of the gap whenever
-the gap exists.
+input *is* a non-repeating sequence. The E3 copy-source control shows that the copying
+pathway itself is present, and fully carried by layer-0 attention, from step 300 on.
 
 So the historical result is best described as **"argmax accuracy on one input
 distribution saturates before the model's behaviour on a second distribution changes"**.
 It is not "behaviour stabilises before mechanism".
+
+Two qualifications keep this account provisional:
+
+- **It is a well-supported explanation, not a proven one.** The evidence comes from
+  loss levels, log-probabilities, defined-fraction trajectories, E3 and E4. It covers
+  2 re-run seeds, one corruption design per question, and attention, MLP and residual
+  interventions only.
+- **Something internal does keep changing after gating appears.** The noising profile
+  shifts toward layer-2 components while behaviour changes only a little. That is a
+  mechanistic change after behavioural stabilisation, in a weak sense close to the
+  original hypothesis. However, it is not what the historical statistic measured, and
+  E3 cannot tell whether it is a reorganisation or a sharpening of the same computation.
 
 ## Limitations
 
@@ -144,9 +197,17 @@ It is not "behaviour stabilises before mechanism".
 - 4 historical seeds; CPU diagnostics for 2 main-config seeds (truncated at step 3,000),
   2 seeds of the 64/2 preset and 1 negative-control seed. No confidence intervals are
   reported, because n is too small for them to mean much. Per-seed values are given instead.
-- The ungated/gated account is supported by loss levels, log-probabilities and
-  defined-fraction trajectories. It has **not** been confirmed by a constructed-weights
-  control or alternative corruptions ([roadmap](docs/RESEARCH_ROADMAP.md) E3, E4).
+- The ungated/gated account is supported by loss levels, log-probabilities,
+  defined-fraction trajectories and the E3/E4 controls. It is not definitively
+  established. E3 covers 2 re-trained seeds and a handful of checkpoints. Recoveries are
+  clipped means over 128 pairs, with no uncertainty estimate. E4 shows the historical probe
+  can return 0 for a gated copier, so a 0 from it is never evidence of no mechanism.
+- Negative and inconclusive results are retained:
+  - the real-text depth diagnostic is null;
+  - head-level localisation differs across seeds;
+  - the 64/2 model never gates;
+  - recovery is noisy (0.2–1.1) in the ungated phase, where few pairs are defined;
+  - the post-gating change in the noising profile is unexplained.
 - The sustained-ceiling criterion was chosen after seeing the data, and the checkpoint grid
   leaves T_m interval-censored to (1,500, 2,000].
 - Head-level, logit-lens and real-text results have no saved numeric outputs and were not
@@ -158,11 +219,16 @@ Measured on a 2-vCPU Linux x86-64 workspace (Python 3.13, JAX 0.12 CPU).
 
 ```sh
 pip install -e ".[dev]"
-pytest -q                          # 23 tests, about 30 s
+pytest -q                          # 40 tests, about 75 s
 bm verify-artifacts --strict       # checks + derived tables from results/*.csv, seconds
 bm figures                         # figures/derived/ from the CSVs
 bm diagnose --seed 0 --stop-at 3000 --out results/diagnostics/my_run    # about 25 min on CPU
 bm diagnostics-report              # summary.csv + diagnostics figure
+bm constructed --out results/controls/my_e4            # E4, about 1 min
+python scripts/train_and_save_checkpoints.py --seed 0 --stop-at 3000 \
+    --steps 300,500,1000,1200,1300,1500,2000,3000        # about 20 min; artifacts/checkpoints/
+bm controls --checkpoints artifacts/checkpoints/main_s0 --out results/controls/my_e3   # about 2 min
+bm controls-report
 ```
 
 | Level | What you can do | Cost |
@@ -182,26 +248,33 @@ metrics, same patching values).
 ```text
 assets/          header image
 configs/         config.json — the historical main-run configuration
-docs/            RESEARCH_AUDIT, RESEARCH_ROADMAP, UPGRADE_HANDOFF, PROVENANCE
+docs/            RESEARCH_AUDIT, RESEARCH_ROADMAP, UPGRADE_HANDOFF, PROVENANCE,
+                 PROPOSED_CORRECTION (draft), E1_PREREGISTRATION (draft)
 figures/         historical figures (unchanged); figures/derived/ regenerated + new
 notebooks/       behaviour_vs_mechanism.ipynb — historical, unchanged
 paper/           behaviour_mechanism_preprint.pdf — September 2026, predates the audit
-results/         historical CSVs (unchanged); derived/ checks; diagnostics/ CPU re-runs with manifests
+results/         historical CSVs (unchanged); derived/ checks; diagnostics/ CPU re-runs;
+                 controls/ E3 and E4 results — all with manifests
+scripts/         train_and_save_checkpoints.py (inputs for E3)
 src/behaviour_mechanism/  config, data, model, training, patching, probes, stability,
+                 controls (E3), constructed (E4), checkpoints, experiments,
                  artifacts, figures, diagnose, provenance, cli
 tests/           unit and regression tests (incl. exact matches to notebook outputs)
 ```
 
 ## Research roadmap
 
-Completed: the original experiment (2026-09), this audit, and the CPU diagnostics. Next,
-in order of information gain (details in
-[`docs/RESEARCH_ROADMAP.md`](docs/RESEARCH_ROADMAP.md)):
+**Completed:**
+- the original experiment (2026-09);
+- this audit and the CPU diagnostics;
+- E4 (constructed weights);
+- E3 on 2 seeds.
 
-1. pre-registered re-measurement with decomposed metrics over 8 seeds;
-2. an offset-randomised task that actually requires induction;
-3. alternative corruptions and interventions;
-4. a constructed-weights positive control.
+**Next, not yet run** (details in [`docs/RESEARCH_ROADMAP.md`](docs/RESEARCH_ROADMAP.md)):
+1. E1, the pre-registered 8-seed re-measurement. Its fixed-probe and dense-checkpoint
+   infrastructure is implemented and tested; the run awaits approval.
+2. E2, an offset-randomised task that actually requires induction.
+3. E3 extended to more seeds and checkpoints, folded into E1.
 
 ## AI safety relevance
 

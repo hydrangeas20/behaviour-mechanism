@@ -47,6 +47,17 @@ The defensible conclusion is narrower and different from the published one:
 The data do not show that behaviour stabilises before "the mechanism". Where a gap exists,
 layer-0 patching recovers most of it from the first checkpoints after behaviour emerges.
 
+**Follow-up controls (§J, added 2026-11-06)** support this account without settling it:
+
+- **E4.** On hand-set copiers, the historical probe returns the values expected by
+  construction. It also returns **0 for an MLP-gated copier**, a demonstrated blind spot.
+- **E3, copy-source corruption.** This corruption is defined throughout training. Its
+  layer-0 attention recovery and disruption are 1.00 at every checkpoint from step 300
+  (2 seeds).
+- **E3, noising.** Reliance on layer-2 components for the match cue keeps growing after
+  gating appears. Some internal change continues after both behavioural transitions; the
+  historical statistic cannot see it.
+
 **Engineering state (before):**
 - a single Colab notebook that cannot run outside Colab;
 - unpinned dependencies;
@@ -236,14 +247,17 @@ The probe's corrupted sequence `[c, r]` is a uniformly random sequence: the trai
     *behaviour on another distribution*.
   - Conditional on a gap existing, layer-0 patching recovers it. Conditional recovery is
     noisy (0.2–1.1) while only 1–26 of 64 pairs are defined, then 0.98–1.0 once the gap
-    opens (seed 0 from step 1,200; seed 1 from step 1,500). There is no evidence of
-    internal reorganisation independent of this behavioural change.
+    opens (seed 0 from step 1,200; seed 1 from step 1,500).
+  - The historical statistic shows no internal change beyond this behavioural one. The E3
+    noising controls (§J) do show further change: downstream necessity grows after
+    gating, while the gap grows only modestly. "No internal change" is therefore *not*
+    a conclusion of this audit.
 - **Alternative explanations still open.**
   - The gating computation may be implemented in a different component (an MLP, or later
     layers) that single-layer attention patching cannot see.
   - The noisy conditional recovery in the ungated phase (0.2–1.0 on 1–24 pairs) may hide
     a real change.
-  - Roadmap E3 and E4 address both.
+  - Roadmap E3 and E4 address both; see §J for what they found.
 
 ### E.4 Other methodological issues (P1)
 
@@ -326,7 +340,8 @@ The probe's corrupted sequence `[c, r]` is a uniformly random sequence: the trai
 | P1-2 | P1 | Outcome-informed criterion; T_b misreported for θ ≥ 0.98; checkpoint gap 1,500–2,000 | preprint §4.1; `sustained_ceiling_sweep.csv` | over-precise claims | correct the numbers; denser checkpoints | S | E1 | Numbers corrected in docs |
 | P1-3 | P1 | Bootstrap uses the rejected rule | cell 32 | invalid uncertainty claim | removed from README claims | S | no | Done |
 | P1-4 | P1 | 4 seeds; scale scan 2 seeds; no n in tables | CSVs | weak generalisation | 8 seeds | M | E1, E5 | Proposed |
-| P1-5 | P1 | Corruption changes the query token; attention-only, single-layer patching | cell 17 | narrow causal claim | alternative corruptions and interventions | M | E3 | Proposed |
+| P1-5 | P1 | Corruption changes the query token; attention-only, single-layer patching | cell 17 | narrow causal claim | alternative corruptions and interventions | M | E3 | **Partly done**: E3 on 2 seeds (§J); more seeds via E1 |
+| P1-8 | P1 | Probe can return 0 for a gated mechanism (MLP-computed gate) | E4, `results/controls/e4_constructed/` | historical zeros are uninterpretable as "no mechanism" | report defined fraction; use several corruptions and sites | S | E4 | **Found by E4**; documented |
 | P1-6 | P1 | Head-level, logit-lens and real-text numbers lack artifacts | cells 29, 33, 53 | unverifiable | regenerate with saved outputs | M | partly | Marked unverified |
 | P1-7 | P1 | Not runnable outside Colab; no pins; no tests/CI | cells 2, 7; `requirements.txt` | no independent reproduction | package, tests, CI, verified environment | M | no | **Fixed** |
 | P2-1 | P2 | README file tree and links wrong; emoji title | README | confusion | rewrite | S | no | **Fixed** |
@@ -341,7 +356,107 @@ See [RESEARCH_ROADMAP.md](RESEARCH_ROADMAP.md). In order of information gain:
    8 seeds and dense checkpoints between 1,500 and 2,500. Tests H-align.
 2. **E2.** An offset-randomised task that only token matching solves. Tests the original
    question on a task that fits its framing.
-3. **E3.** Alternative corruptions and interventions.
-4. **E4.** A constructed-weights positive control.
+3. **E3.** Alternative corruptions and interventions. **Done for 2 seeds** (§J). Extend
+   to 8 seeds inside E1.
+4. **E4.** A constructed-weights positive control. **Done** (§J).
 
-A larger model is **not** recommended until E1–E4 are done.
+A larger model is **not** recommended until E1 and E2 are done.
+
+## J. Follow-up controls: E3 and E4 (2026-11-06)
+
+Code: `src/behaviour_mechanism/controls.py` and `constructed.py`.
+Runs: `results/controls/*/` (CSV + manifest; commit `9c3c69e`, clean tree).
+Regression tests: `tests/test_controls.py` and `test_recorded_e3_e4_results`.
+The historical protocol and data are unchanged; these are new measurements.
+
+### J.1 E4: constructed-weights positive control
+
+The three copiers are hand-set in the historical architecture class (2 layers, 2 heads,
+d_model 512, LayerNorm made exactly the identity). In all three, layer-0 head 1 copies the
+token at q − 31, and layer 1's MLP outputs it when a "match" flag is set.
+
+- **Ungated:** the flag is constant.
+- **MLP-gated:** head 0 fetches the token at q − 32 by position, and the layer-0 MLP
+  compares it with the current token.
+- **Attention-gated:** head 0 attends to q − 32 only if the token there matches the
+  current token, so the match is carried by the attention output.
+
+Historical probe, 64 pairs (`probe.csv`):
+
+| Model | Behavioural accuracy | Defined fraction | Patching statistic | Recovery \| defined, L0 | Expected by construction |
+|---|---|---|---|---|---|
+| ungated | 1.000 | 0.00 | 0.00 (undefined) | — | 0 defined, 0 |
+| MLP-gated | 0.969 (= 31/32) | 1.00 | **0.00** | 0.00 | 1 defined, 0 |
+| attention-gated | 0.969 (= 31/32) | 1.00 | 1.00 | 1.00 | 1 defined, 1 |
+
+What this shows:
+
+1. The probe pipeline computes what it is supposed to compute. Every value equals the
+   hand derivation.
+2. A historical 0 can mean "undefined" (ungated) *or* "gated outside attention"
+   (MLP-gated). The statistic alone cannot tell these apart from "no mechanism", so zeros
+   are uninterpretable.
+3. The 31/32 accuracy bound behaves as argued in §E.1. Token-gated copiers sit exactly on
+   it; the trained models exceed it, which means they also use position.
+
+The E3 controls separate the two gated designs (`controls.csv`). Under the
+**query-token** corruption, layer-0 attention denoising gives 0.00 (MLP-gated) against
+1.00 (attention-gated); MLP-0 denoising gives 1.00 for both.
+
+### J.2 E3: corruption × intervention controls on re-trained checkpoints
+
+- **Checkpoints.** From CPU re-runs of seeds 0 and 1, saved by
+  `scripts/train_and_save_checkpoints.py`. Their records equal the earlier diagnostic runs,
+  which themselves reproduce the GPU history.
+- **Pairs.** 128 per corruption, the same pairs at every checkpoint.
+- **Sites.**
+  - each layer's attention output;
+  - each layer's MLP output;
+  - the residual stream at the read position after each layer;
+  - all attention outputs jointly.
+- **Directions.** Denoising (recovery) and noising (disruption).
+- **Summaries.** Means of clipped per-pair values over defined pairs. No uncertainty
+  intervals were computed.
+
+| Observation | Seed 0 (steps 300–3,000) | Seed 1 (steps 300–2,500) |
+|---|---|---|
+| Copy-source: defined pairs | 128/128 at every step | 128/128 at every step |
+| Copy-source: L0 attention recovery / disruption | 1.00 / 1.00 at every step | 1.00 / 1.00 at every step |
+| Query-token: defined pairs | 57 → 22 → 5 (300–1,000), 66 (1,200), 116 (1,300), ≥ 124 after | 103 (300), 10 (1,000), 56–74 (1,400–1,500), ≥ 127 after |
+| Query-token: median gap | ≈ 0 until 1,200; 3.4 (1,300); 4.35 (3,000) | ≈ 0 until 1,500; 4.19 (2,000); 4.34 (2,500) |
+| Query-token: L0 attention recovery | 0.73–0.96 while few pairs are defined; 0.99–1.00 from 1,300 | 0.74–0.97; 1.00 from 2,000 |
+| Query-token: L2 attention disruption | ≤ 0.17 until 1,500; 0.50 (2,000); 0.62 (3,000) | ≤ 0.15 until 1,500; 0.93 (2,000); 0.91 (2,500) |
+| Query-token: L2 MLP disruption | 0.15–0.45 until 1,500; 0.74; 0.81 | 0.20–0.26 until 1,500; 0.50; 0.69 |
+| Query-token: L0 MLP disruption | 0.62–0.85 until 1,300; 0.95–0.99 after | 0.56–0.67 until 1,500; 0.84–0.96 after |
+
+Earlier-occurrence and historical random-second-half corruptions give the same pattern
+as query-token (`summary_wide.csv`).
+
+### J.3 What E3/E4 change in the interpretation
+
+- **Consistent with the revised account (§E.3).**
+  - The copying pathway is present and causally carried by layer-0 attention from step
+    300 on, through the period in which the historical statistic was 0 or varied.
+  - The match cue only produces a measurable gap once gating appears.
+  - In the gated phase, the match information passes through layer-0 attention output:
+    the attention-gated signature, not the MLP-gated one.
+- **Refines it.** "Layer 0 carries the effect" holds only in the *sufficiency* sense. In
+  the gated phase, *necessity* is spread over layer-0 MLP, layer-2 attention and layer-2/3
+  MLPs.
+- **Partly qualifies it.** After gating, the necessity of layer-2 components keeps rising
+  (seed 0: L2 attention 0.13 → 0.50 → 0.62 between steps 1,500, 2,000 and 3,000) while the
+  query-token gap rises only from 4.05 to 4.35 nats. This is internal change after both
+  behavioural transitions, invisible to the historical statistic. It resembles the
+  original hypothesis in a weaker form. It could be reorganisation, or sharpening of one
+  computation as confidence grows (the copy-source gap also grows, 8.7 → 10.7 nats).
+  E3 cannot tell which.
+- **Did anything contradict the revised account?** No result contradicts the claim that
+  the historical statistic's late rise tracks gating. The post-gating noising change is
+  the main finding that the revised account, as first written, did not anticipate. The
+  wording in §A and §E.3 has been adjusted.
+- **Inconclusive or negative.**
+  - The ungated-phase recoveries for match-cue corruptions rest on 3–103 small-gap pairs
+    and are noisy.
+  - The residual-stream patch for the earlier-occurrence corruption recovers only
+    0.02–0.25 in the ungated phase (seed 0, 3–35 defined pairs). This is unexplained.
+  - Only 2 seeds were run, and there are no intervals.

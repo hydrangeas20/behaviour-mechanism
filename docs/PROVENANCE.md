@@ -43,8 +43,16 @@ and are not in the repository.
 | `figures/derived/historical_*.png`, `patch_statistic_quantisation.png`, `sustained_ceiling_sweep.png` | `bm figures` | deterministic function of the CSVs |
 | `results/diagnostics/<run>/checkpoints.jsonl` | `bm diagnose …` | `results/diagnostics/<run>/manifest.json` (git commit, dirty flag, versions, hardware, config, seed, timestamps, command) |
 | `results/diagnostics/summary.csv`, `figures/derived/diagnostics_trajectories.png` | `bm diagnostics-report` | derived from the run directories |
+| `results/controls/e4_constructed/` | `bm constructed` | `manifest.json` (commit `9c3c69e`, clean tree; construction constants) |
+| `results/controls/e3_main_s{0,1}/` | `bm controls --checkpoints artifacts/checkpoints/main_s{0,1} --n-pairs 128` | `manifest.json` (commit `9c3c69e`, clean tree; sha256 of every input checkpoint); `checkpoints_manifest.json` (the training run that wrote the checkpoints, with per-checkpoint records) |
+| `artifacts/checkpoints/main_s{0,1}/step_*.npz` (**not committed**: 3.3 MB each; regenerate with `scripts/train_and_save_checkpoints.py`) | see README | sha256s recorded in the E3 manifests |
+| `figures/derived/e3_controls.png`, `results/controls/*/summary_wide.csv` | `bm controls-report` | derived from the E3 CSVs |
 
 The diagnostic runs were produced from a working tree with uncommitted changes, so their
 manifests record `dirty: true` and the parent commit `3fbc2bf`. The committed package
 differs from the code that ran only by formatting, type annotations and one semantically
 identical edit (see UPGRADE_HANDOFF §5).
+
+The checkpoint-training runs for E3 started from commit `cb094ee` with uncommitted package
+code (`dirty: true`). Their records equal the committed diagnostic runs value for value
+(behavioural score and raw loss at every saved step), so they follow the same trajectory.
