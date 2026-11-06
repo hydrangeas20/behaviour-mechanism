@@ -89,6 +89,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--n-pairs", type=int, default=128)
     p.add_argument("--pair-seed", type=int, default=0)
 
+    p = sub.add_parser("controls-report")
+    p.add_argument("--repo", default=None)
+
     p = sub.add_parser("diagnostics-report")
     p.add_argument("--repo", default=None)
 
@@ -162,6 +165,13 @@ def main(argv: list[str] | None = None) -> int:
             load_config(a.config), Path(a.checkpoints), Path(a.out), a.n_pairs, a.pair_seed
         )
         print("wrote", path)
+        return 0
+
+    if a.cmd == "controls-report":
+        from .figures import controls_report
+
+        for path in controls_report(_repo(a.repo)):
+            print("wrote", path)
         return 0
 
     if a.cmd == "diagnostics-report":

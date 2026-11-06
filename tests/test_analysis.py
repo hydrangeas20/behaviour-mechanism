@@ -126,3 +126,21 @@ def test_git_state_reports_clean_tree_as_false(monkeypatch):
     assert provenance.git_state()["dirty"] is False
     monkeypatch.setattr(provenance, "_git", lambda *a: None)
     assert provenance.git_state()["dirty"] is None
+
+
+def test_recorded_e3_e4_results(repo):
+    """Pins the committed E3/E4 outputs (results/controls/) to the reported findings."""
+    e4 = pd.read_csv(repo / "results/controls/e4_constructed/probe.csv").set_index("model")
+    for model in e4.index:
+        assert e4.loc[model, "probe_defined_fraction"] == pytest.approx(
+            e4.loc[model, "expected_defined_fraction"], abs=0.02)
+        assert e4.loc[model, "probe_patch_effect_size"] == pytest.approx(
+            e4.loc[model, "expected_patch_effect_size"], abs=0.02)
+    for seed in (0, 1):
+        c = pd.read_csv(repo / f"results/controls/e3_main_s{seed}/controls.csv")
+        cs = c[(c.corruption == "copy_source") & (c.intervention == "attn_L0")]
+        assert (cs.n_defined == cs.n_pairs).all()
+        assert (cs.recovery_mean > 0.99).all() and (cs.disruption_mean > 0.99).all()
+        late = c[(c.corruption == "query_token") & (c.intervention == "attn_L0")
+                 & (c.step >= 2000)]
+        assert (late.recovery_mean > 0.99).all()

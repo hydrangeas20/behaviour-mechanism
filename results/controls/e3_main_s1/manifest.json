@@ -1,0 +1,53 @@
+{
+  "checkpoint_dir": "artifacts/checkpoints/main_s1",
+  "checkpoint_manifest": "artifacts/checkpoints/main_s1/manifest.json",
+  "checkpoints": {
+    "step_1000.npz": "656a7224e0df61e121c79426b847d8f62c1c929a159ac1fd781d87833077b982",
+    "step_1400.npz": "962fd2c6a49acdd047fafe5abfc12d1983b42006de75a4f94af92a8a95c168d2",
+    "step_1500.npz": "476d03d93b97dfbdcd83ecfe38be3d3ce67e402f3de767f0b4a81e481896383b",
+    "step_2000.npz": "5572ddfacf6406ec18719e3f5a5f131beb36862167be3d477b65d3c08208c29a",
+    "step_2500.npz": "aa114d1e4df246cc17fcd079636b7d16e1a57074bd2a5bc415ac1bcaa1a900c6",
+    "step_300.npz": "52623d1582c1830fc62136dea221e0a8306ca8030106bf52ecc66ede0187852f"
+  },
+  "command": [
+    "/usr/local/bin/bm",
+    "controls",
+    "--checkpoints",
+    "artifacts/checkpoints/main_s1",
+    "--out",
+    "results/controls/e3_main_s1",
+    "--n-pairs",
+    "128"
+  ],
+  "config_hash": "57c45749eb6d",
+  "created_utc": "2026-11-06T04:55:41+00:00",
+  "git": {
+    "branch": "research/rigor-and-reproducibility",
+    "commit": "9c3c69e83171f32cb0bb77b4348ab3536b28174e",
+    "dirty": false
+  },
+  "hardware": {
+    "cpu_count": 2,
+    "jax_backend": "cpu",
+    "jax_devices": [
+      "cpu:0"
+    ],
+    "machine": "x86_64",
+    "platform": "Linux-6.18.44-fc-v242-x86_64-with-glibc2.39",
+    "processor": "x86_64"
+  },
+  "kind": "e3_checkpoint_controls",
+  "n_pairs": 128,
+  "pair_seed": 0,
+  "software": {
+    "flax": "0.12.12",
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "matplotlib": "3.11.2",
+    "numpy": "2.5.3",
+    "optax": "0.2.8",
+    "pandas": "3.0.5",
+    "python": "3.13.18"
+  },
+  "status": "complete"
+}

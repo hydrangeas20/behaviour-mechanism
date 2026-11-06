@@ -214,3 +214,53 @@ def diagnostics_report(repo: Path) -> list[Path]:
 
 
 __all__ = ["diagnostics_report", "expected_raw_loss", "historical_figures"]
+
+
+def controls_report(repo: Path) -> list[Path]:
+    """E3 figure + compact tables from ``results/controls/e3_*/controls.csv``."""
+    runs = sorted((repo / "results" / "controls").glob("e3_*/controls.csv"))
+    if not runs:
+        raise FileNotFoundError("no results/controls/e3_*/controls.csv")
+    panels = [
+        ("copy_source", "attn_L0", "recovery_mean", "copy-source corruption:\nL0 attn recovery"),
+        ("query_token", None, "defined_fraction", "query-token corruption:\ndefined fraction"),
+        ("query_token", "attn_L0", "recovery_mean", "query-token corruption:\nL0 attn recovery"),
+        (
+            "query_token",
+            "attn_L2",
+            "disruption_mean",
+            "query-token corruption:\nL2 attn disruption",
+        ),
+        ("query_token", "mlp_L2", "disruption_mean", "query-token corruption:\nL2 MLP disruption"),
+    ]
+    fig, axes = plt.subplots(len(panels), 1, figsize=(7, 1.8 * len(panels)), sharex=True)
+    tables = []
+    for i, path in enumerate(runs):
+        c = pd.read_csv(path)
+        c["defined_fraction"] = c.n_defined / c.n_pairs
+        name = path.parent.name
+        for ax, (corr, iv, col, _) in zip(axes, panels, strict=True):
+            g = c[c.corruption == corr]
+            g = g[g.intervention == (iv or "attn_L0")].sort_values("step")
+            ax.plot(g.step, g[col], color=SERIES[i], marker="o", ms=3, lw=1.5, label=name)
+        t = c.pivot_table(
+            index=["corruption", "intervention"],
+            columns="step",
+            values=["recovery_mean", "disruption_mean"],
+        )
+        tables.append((name, t))
+    for ax, (*_, lab) in zip(axes, panels, strict=True):
+        ax.set_ylabel(lab, fontsize=8)
+        ax.set_ylim(-0.05, 1.08)
+        _style(ax)
+    axes[0].legend(fontsize=7, frameon=False, loc="lower right")
+    axes[-1].set_xlabel("Training step (saved CPU re-run checkpoints)")
+    fig.suptitle(
+        "E3 controls on re-trained checkpoints (128 pairs per corruption)", fontsize=10, color=INK
+    )
+    out = [_save(fig, repo / "figures" / "derived" / "e3_controls.png")]
+    for name, t in tables:
+        p = repo / "results" / "controls" / name / "summary_wide.csv"
+        t.round(3).to_csv(p)
+        out.append(p)
+    return out
