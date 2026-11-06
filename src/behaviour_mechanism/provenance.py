@@ -18,7 +18,7 @@ def _git(*args: str) -> str | None:
         out = subprocess.run(
             ["git", *args], capture_output=True, text=True, check=True, timeout=10
         ).stdout.strip()
-        return out or None
+        return out  # "" is a valid answer (e.g. a clean `git status --porcelain`)
     except (OSError, subprocess.SubprocessError):
         return None
 
@@ -26,8 +26,8 @@ def _git(*args: str) -> str | None:
 def git_state() -> dict[str, Any]:
     status = _git("status", "--porcelain", "--untracked-files=no")
     return {
-        "commit": _git("rev-parse", "HEAD"),
-        "branch": _git("rev-parse", "--abbrev-ref", "HEAD"),
+        "commit": _git("rev-parse", "HEAD") or None,
+        "branch": _git("rev-parse", "--abbrev-ref", "HEAD") or None,
         "dirty": None if status is None else bool(status),
     }
 

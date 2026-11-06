@@ -116,3 +116,13 @@ def test_cli_diagnose_smoke(tmp_path, tiny_cfg):
                 str(out),
             ]
         )
+
+
+def test_git_state_reports_clean_tree_as_false(monkeypatch):
+    from behaviour_mechanism import provenance
+
+    answers = {"rev-parse": "abc123", "status": ""}
+    monkeypatch.setattr(provenance, "_git", lambda *a: answers[a[0]])
+    assert provenance.git_state()["dirty"] is False
+    monkeypatch.setattr(provenance, "_git", lambda *a: None)
+    assert provenance.git_state()["dirty"] is None
