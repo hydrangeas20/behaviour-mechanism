@@ -1,0 +1,91 @@
+{
+  "command": [
+    "/usr/local/bin/bm",
+    "diagnose",
+    "--seed",
+    "0",
+    "--stop-at",
+    "3000",
+    "--out",
+    "results/diagnostics/main_s0_to3000",
+    "--label",
+    "main config, seed 0, CPU re-run truncated at 3000 (schedule of 8000)"
+  ],
+  "config": {
+    "batch_size": 64,
+    "d_ff": 512,
+    "d_model": 128,
+    "dense_ckpt_every": 50,
+    "dense_ckpt_until": 1500,
+    "dropout_rate": 0.0,
+    "eval_batch_size": 64,
+    "eval_batches": 8,
+    "frac_induction_sequences": 0.7,
+    "induction_gap_max": 40,
+    "induction_gap_min": 2,
+    "learning_rate": 0.0003,
+    "max_seq_len": 64,
+    "n_heads": 4,
+    "n_layers": 4,
+    "seeds": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "seq_len": 64,
+    "sparse_ckpt_every": 500,
+    "total_steps": 8000,
+    "vocab_size": 100,
+    "warmup_steps": 100,
+    "weight_decay": 0.01
+  },
+  "config_hash": "57c45749eb6d",
+  "created_utc": "2026-11-06T01:30:28+00:00",
+  "experiment_id": "diag-57c45749eb6d-s0-to3000",
+  "git": {
+    "branch": "research/rigor-and-reproducibility",
+    "commit": "3fbc2bfab6fd1a1f0d4cc7642581a637ce0a36da",
+    "dirty": true
+  },
+  "hardware": {
+    "cpu_count": 2,
+    "jax_backend": "cpu",
+    "jax_devices": [
+      "cpu:0"
+    ],
+    "machine": "x86_64",
+    "platform": "Linux-6.18.44-fc-v242-x86_64-with-glibc2.39",
+    "processor": "x86_64"
+  },
+  "kind": "diagnostic_run",
+  "label": "main config, seed 0, CPU re-run truncated at 3000 (schedule of 8000)",
+  "measurement": {
+    "head_pairs": 16,
+    "historical_patch_pairs": 8,
+    "large_patch_pairs": 64,
+    "probe_offsets": [
+      8,
+      16,
+      24,
+      32
+    ],
+    "probe_sequences": 128
+  },
+  "n_params": 827236,
+  "n_rows": 34,
+  "seconds": 1092.1,
+  "seed": 0,
+  "software": {
+    "flax": "0.12.12",
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "matplotlib": "3.11.2",
+    "numpy": "2.5.3",
+    "optax": "0.2.8",
+    "pandas": "3.0.5",
+    "python": "3.13.18"
+  },
+  "status": "complete",
+  "stop_at": 3000
+}

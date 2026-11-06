@@ -1,3 +1,6 @@
+# Historical (Colab, Sept 2026): unpinned; the notebook printed jax 0.11.1, flax 0.12.9.
+# Current install: `pip install -e ".[dev]"` (see pyproject.toml).
+# Exact environment the test suite and CPU diagnostics ran in: requirements/verified-cpu.txt
 jax
 flax
 optax
