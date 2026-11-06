@@ -119,14 +119,21 @@ def run_training(
     log_every: int = 1000,
     stop_at: int | None = None,
     on_record: Callable[[dict[str, Any]], None] | None = None,
+    extra_eval_steps: tuple[int, ...] = (),
 ) -> TrainResult:
     """Train one seed. ``on_checkpoint(step, params)`` may return extra record fields.
 
     ``stop_at`` ends training early *without* changing the learning-rate schedule (which
     is always defined by ``cfg.total_steps``), so a truncated run follows the same
     trajectory as the full run up to ``stop_at``.
+
+    ``extra_eval_steps`` adds measurement checkpoints *without* touching the training RNG
+    stream: their behavioural evaluation uses ``fold_in(PRNGKey(seed + 90_000), step)``
+    instead of a split of the main key, so the trajectory (and every historical
+    checkpoint's record) is unchanged. Records carry ``extra_checkpoint = True``.
     """
     last = cfg.total_steps if stop_at is None else min(stop_at, cfg.total_steps)
+    extra = set(extra_eval_steps) - set(cfg.checkpoint_steps())
     t0 = time.time()
     model = build_model(cfg)
     rng = random.PRNGKey(seed)
@@ -142,8 +149,11 @@ def run_training(
     running_raw: float | None = None
 
     for step in range(cfg.total_steps + 1):
-        if step in ckpt_steps:
-            rng, eval_rng = random.split(rng)
+        if step in ckpt_steps or step in extra:
+            if step in ckpt_steps:
+                rng, eval_rng = random.split(rng)
+            else:
+                eval_rng = random.fold_in(random.PRNGKey(seed + 90_000), step)
             rec: dict[str, Any] = {
                 "seed": seed,
                 "step": step,
@@ -151,6 +161,8 @@ def run_training(
                 "train_loss": running_loss,
                 "raw_loss": running_raw,
             }
+            if step in extra:
+                rec["extra_checkpoint"] = True
             if on_checkpoint is not None:
                 rec.update(on_checkpoint(step, params))
             records.append(rec)

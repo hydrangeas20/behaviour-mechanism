@@ -157,10 +157,17 @@ class Patch:
     Replacement is applied at every position, as in the historical notebook; because
     attention is causal and clean/corrupted sequences share their first half, only
     positions ``>= half`` can differ.
+
+    Added for the E3 controls (not used by the historical statistic):
+    ``mlp_out[l]`` replaces layer ``l``'s MLP output (all positions, ``(B, T, d_model)``);
+    ``resid_post[l] = (pos, value)`` replaces the residual stream after layer ``l`` at one
+    position only, ``value`` of shape ``(B, d_model)``.
     """
 
     layer_attn_out: dict[int, Array] = field(default_factory=dict)
     head_out: dict[tuple[int, int], Array] = field(default_factory=dict)
+    mlp_out: dict[int, Array] = field(default_factory=dict)
+    resid_post: dict[int, tuple[int, Array]] = field(default_factory=dict)
 
 
 @dataclass
@@ -168,6 +175,7 @@ class Cache:
     layer_attn_out: dict[int, Array] = field(default_factory=dict)
     head_out: dict[int, Array] = field(default_factory=dict)  # (B, H, T, head_dim)
     resid_post: dict[int, Array] = field(default_factory=dict)
+    mlp_out: dict[int, Array] = field(default_factory=dict)
 
 
 def forward(
@@ -210,8 +218,15 @@ def forward(
         if cache is not None:
             cache.layer_attn_out[i] = attn_out
         x = x + attn_out
-        ff = nn.gelu(_dense(bp["ff1"], _layer_norm(bp["ln2"], x)))
-        x = x + _dense(bp["ff2"], ff)
+        ff = _dense(bp["ff2"], nn.gelu(_dense(bp["ff1"], _layer_norm(bp["ln2"], x))))
+        if patch is not None and i in patch.mlp_out:
+            ff = patch.mlp_out[i]
+        if cache is not None:
+            cache.mlp_out[i] = ff
+        x = x + ff
+        if patch is not None and i in patch.resid_post:
+            rpos, rval = patch.resid_post[i]
+            x = x.at[:, rpos].set(rval)
         if cache is not None:
             cache.resid_post[i] = x
     x = _layer_norm(params["ln_f"], x)
