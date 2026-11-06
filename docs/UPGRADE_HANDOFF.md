@@ -173,8 +173,7 @@ Flax 0.12.12, Optax 0.2.8):
 - **P2:**
   - optionally rename "induction" throughout the notebook markdown (historical file, left
     unchanged);
-  - decide whether to post an erratum to the Zenodo preprint;
-  - choose a licence (none present).
+  - decide whether to post an erratum to the Zenodo preprint.
 
 ## 8. Research roadmap
 
@@ -212,4 +211,3 @@ bm diagnose --seed 0 --stop-at 3000 --out results/diagnostics/repro_s0 && bm dia
 3. Decide whether to publish a Zenodo erratum or new version.
 4. Approve compute for E1, the 8-seed re-measurement. It is feasible on CPU (about 3.5 h)
    or a GPU (minutes; unverified).
-5. Choose a licence.

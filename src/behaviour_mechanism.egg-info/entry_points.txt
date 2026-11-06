@@ -1,2 +1,0 @@
-[console_scripts]
-bm = behaviour_mechanism.cli:main
