@@ -256,37 +256,57 @@ def baseline_table(
     best_k = max(fixed, key=lambda k: fixed[k])
     half = e2.seq_len // 2
     rows = [
-        ("chance (1 / vocab)", "shortcut", 1 / e2.vocab_size),
+        ("chance", "chance (1 / vocab)", "shortcut", 1 / e2.vocab_size),
         (
+            "token_frequency",
             "token-frequency (most common token)",
             "shortcut",
             accuracy(predict_constant(tok, tables["unigram_token"]), batch),
         ),
         (
+            "position_only",
             "position-only (most common token per position)",
             "shortcut",
             accuracy(predict_by_position(tok, tables["position_table"]), batch),
         ),
         (
+            "bigram",
             "bigram (most common successor)",
             "shortcut",
             accuracy(predict_bigram(tok, tables["bigram_table"]), batch),
         ),
-        ("previous-token copy", "shortcut", accuracy(predict_previous_token(tok), batch)),
-        (f"fixed-offset copy, historical offset {half}", "shortcut", fixed[half]),
-        (f"fixed-offset copy, best single offset ({best_k})", "shortcut", fixed[best_k]),
         (
+            "previous_token",
+            "previous-token copy",
+            "shortcut",
+            accuracy(predict_previous_token(tok), batch),
+        ),
+        (
+            "fixed_offset_historical",
+            f"fixed-offset copy, historical offset {half}",
+            "shortcut",
+            fixed[half],
+        ),
+        (
+            "fixed_offset_best",
+            f"fixed-offset copy, best single offset ({best_k})",
+            "shortcut",
+            fixed[best_k],
+        ),
+        (
+            "reference_a",
             "reference A: last-occurrence induction",
             "reference",
             accuracy(predict_last_occurrence(tok), batch),
         ),
         (
+            "reference_b",
             "reference B: longest-suffix induction",
             "reference",
             accuracy(predict_longest_suffix(tok), batch),
         ),
     ]
-    return [{"predictor": n, "kind": k, "accuracy": a} for n, k, a in rows]
+    return [{"label": l, "predictor": n, "kind": k, "accuracy": a} for l, n, k, a in rows]
 
 
 # ---------------------------------------------------------------------------
@@ -357,7 +377,10 @@ def make_e2_pairs(
             bad[q] = resample(int(row[q]))
         else:
             if spare is not None:
-                bad[r:] = rng.choice(spare, size=t - r)
+                # unused tokens plus the filler after the repeat: none of them occurs
+                # before the repeat, and drawing without replacement avoids new duplicates
+                pool = np.concatenate([spare, row[r + l :]])
+                bad[r:] = rng.choice(pool, size=t - r, replace=False)
             else:
                 bad[r:] = rng.integers(0, v, size=t - r)
         clean[i], corrupt[i], target[i], read_pos[i] = row, bad, row[q + 1], q

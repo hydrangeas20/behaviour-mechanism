@@ -103,6 +103,20 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--ckpt-every", type=int, default=250)
     p.add_argument("--label", default="")
 
+    p = sub.add_parser("e2-baselines", help="Stage 2: shortcut baselines and leakage checks")
+    p.add_argument("--out", default="results/stage2/baselines")
+
+    p = sub.add_parser("e2-eval", help="Stage 2: behaviour + mechanism at saved checkpoints")
+    p.add_argument("--run", required=True, help="training run directory")
+    p.add_argument("--out", required=True)
+    p.add_argument("--n-pairs", type=int, default=128)
+
+    p = sub.add_parser("e2-calibrate", help="Stage 2: positive-control calibration")
+    p.add_argument("--out", default="results/stage2/calibration")
+
+    p = sub.add_parser("e2-report", help="Stage 2: figures and tables from saved results")
+    p.add_argument("--repo", default=None)
+
     p = sub.add_parser("controls-report")
     p.add_argument("--repo", default=None)
 
@@ -200,6 +214,32 @@ def main(argv: list[str] | None = None) -> int:
         if a.steps is not None:
             cfg = cfg.replace(total_steps=a.steps)
         print("wrote", train_e2(cfg, E2Config(), a.seed, Path(a.out), a.ckpt_every, label=a.label))
+        return 0
+
+    if a.cmd == "e2-baselines":
+        from .experiments import run_e2_baselines
+
+        print("wrote", run_e2_baselines(Path(a.out)))
+        return 0
+
+    if a.cmd == "e2-eval":
+        from .e2_eval import evaluate_run
+
+        print("wrote", evaluate_run(Path(a.run), Path(a.out), a.n_pairs))
+        return 0
+
+    if a.cmd == "e2-calibrate":
+        from .e2_eval import calibrate
+
+        cal = calibrate(Path(a.out))
+        print(json.dumps(json.loads((cal / "summary.json").read_text())["distinct"]))
+        return 0
+
+    if a.cmd == "e2-report":
+        from .e2_figures import e2_report
+
+        for path in e2_report(_repo(a.repo)):
+            print("wrote", path)
         return 0
 
     if a.cmd == "controls-report":
