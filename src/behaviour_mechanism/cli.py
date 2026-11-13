@@ -89,6 +89,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--n-pairs", type=int, default=128)
     p.add_argument("--pair-seed", type=int, default=0)
 
+    p = sub.add_parser("stage1-controls", help="Stage 1 positive controls (bm-patch-2)")
+    p.add_argument("--out", default="results/stage1/positive_controls")
+    p.add_argument("--n-pairs", type=int, default=64)
+    p.add_argument("--pair-seed", type=int, default=0)
+
     p = sub.add_parser("controls-report")
     p.add_argument("--repo", default=None)
 
@@ -166,6 +171,14 @@ def main(argv: list[str] | None = None) -> int:
         )
         print("wrote", path)
         return 0
+
+    if a.cmd == "stage1-controls":
+        from .experiments import run_stage1_positive_controls
+
+        s1_out = run_stage1_positive_controls(Path(a.out), a.n_pairs, a.pair_seed)
+        summary = json.loads((s1_out / "summary.json").read_text())
+        print(f"{summary['passed']}/{summary['cells']} cells match predictions; wrote {s1_out}")
+        return 0 if summary["failed"] == 0 else 1
 
     if a.cmd == "controls-report":
         from .figures import controls_report

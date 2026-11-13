@@ -102,3 +102,40 @@ def run_checkpoint_controls(
         ),
     )
     return out
+
+
+def run_stage1_positive_controls(out: Path, n_pairs: int = 64, seed: int = 0) -> Path:
+    """Stage 1: analytic predictions vs the corrected measurement on constructed copiers."""
+    import json
+
+    from .measurement import METRIC_VERSION
+    from .positive_controls import CORRUPTIONS, SITES, TOLERANCE, run
+
+    _fresh(out)
+    rows, legacy = run(n_pairs, seed)
+    df = pd.DataFrame(rows)
+    df.to_csv(out / "comparison.csv", index=False)
+    pd.DataFrame(legacy).to_csv(out / "legacy_statistic.csv", index=False)
+    summary = {
+        "metric_version": METRIC_VERSION,
+        "cells": len(df),
+        "passed": int(df["pass"].sum()),
+        "failed": int((~df["pass"]).sum()),
+        "failures": df[~df["pass"]].to_dict("records"),
+    }
+    (out / "summary.json").write_text(json.dumps(summary, indent=2, default=str) + "\n")
+    write_manifest(
+        out / "manifest.json",
+        build_manifest(
+            "stage1_positive_controls",
+            metric_version=METRIC_VERSION,
+            n_pairs=n_pairs,
+            pair_seed=seed,
+            corruptions=list(CORRUPTIONS),
+            sites=[s.name for s in SITES],
+            tolerance=TOLERANCE,
+            models=list(constructed.MODELS),
+            status="complete",
+        ),
+    )
+    return out
