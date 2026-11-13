@@ -64,3 +64,16 @@ longer schedule now is a decision made with knowledge of the interim results. An
 found with this run is exploratory in a stronger sense than the declared runs, and the
 report must say so. The "learns the task" rule (final in-distribution accuracy of at least
 0.90) is unchanged.
+
+## Amendment 2 (written when the secondary declared run learned the task)
+
+Between steps 4,000 and 4,500 the secondary declared run (`e2_lr1e-3_s0`) moved from the
+plateau to in-distribution accuracy 0.87 and held-out-length accuracy 0.85. The condition
+that motivated the contingency run no longer held, so `e2_2layer_lr1e-3_s0` was **stopped
+by hand at about step 5,000 of 12,000** to free CPU for the declared runs and their
+evaluation. It was still on the plateau (in-distribution accuracy 0.16 at step 4,750). Its
+partial training metrics are kept and reported as an incomplete run; no conclusion is
+drawn from it.
+
+Mechanism analysis is carried out on whichever declared runs learn the task, with the
+primary run reported in full either way.
