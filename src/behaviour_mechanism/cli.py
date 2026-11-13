@@ -94,6 +94,15 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--n-pairs", type=int, default=64)
     p.add_argument("--pair-seed", type=int, default=0)
 
+    p = sub.add_parser("e2-train", help="Stage 2: train one model on the E2 task")
+    p.add_argument("--config", default="configs/config.json")
+    p.add_argument("--seed", type=int, required=True)
+    p.add_argument("--out", required=True)
+    p.add_argument("--lr", type=float, default=None, help="override the peak learning rate")
+    p.add_argument("--steps", type=int, default=None, help="override total_steps")
+    p.add_argument("--ckpt-every", type=int, default=250)
+    p.add_argument("--label", default="")
+
     p = sub.add_parser("controls-report")
     p.add_argument("--repo", default=None)
 
@@ -179,6 +188,19 @@ def main(argv: list[str] | None = None) -> int:
         summary = json.loads((s1_out / "summary.json").read_text())
         print(f"{summary['passed']}/{summary['cells']} cells match predictions; wrote {s1_out}")
         return 0 if summary["failed"] == 0 else 1
+
+    if a.cmd == "e2-train":
+        from .config import load_config
+        from .e2 import E2Config
+        from .e2_run import train_e2
+
+        cfg = load_config(a.config)
+        if a.lr is not None:
+            cfg = cfg.replace(learning_rate=a.lr)
+        if a.steps is not None:
+            cfg = cfg.replace(total_steps=a.steps)
+        print("wrote", train_e2(cfg, E2Config(), a.seed, Path(a.out), a.ckpt_every, label=a.label))
+        return 0
 
     if a.cmd == "controls-report":
         from .figures import controls_report
