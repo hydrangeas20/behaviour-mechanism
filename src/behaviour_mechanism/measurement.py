@@ -11,8 +11,8 @@ as ``legacy_patch_effect_size_v1``) has three properties that make it unsafe to 
 2. **Fixed site.** It only patches attention outputs. A mechanism whose distinguishing
    computation runs through the residual stream and an MLP produces *no* clean/corrupted
    difference at any attention output. Restoring those outputs then changes nothing:
-   recovery is exactly 0 with every pair defined. ``scripts/stage1_positive_controls.py``
-   demonstrates this on the MLP-gated constructed copier. It is a site-coverage problem,
+   recovery is exactly 0 with every pair defined. ``bm stage1-controls``
+   (``results/stage1/positive_controls/``) demonstrates this on the MLP-gated constructed copier. It is a site-coverage problem,
    not an arithmetic bug.
 3. **Selection.** The headline is the maximum over layers.
 
