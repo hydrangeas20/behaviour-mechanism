@@ -100,6 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out", required=True)
     p.add_argument("--lr", type=float, default=None, help="override the peak learning rate")
     p.add_argument("--steps", type=int, default=None, help="override total_steps")
+    p.add_argument("--layers", type=int, default=None, help="override n_layers")
     p.add_argument("--ckpt-every", type=int, default=250)
     p.add_argument("--label", default="")
 
@@ -213,6 +214,8 @@ def main(argv: list[str] | None = None) -> int:
             cfg = cfg.replace(learning_rate=a.lr)
         if a.steps is not None:
             cfg = cfg.replace(total_steps=a.steps)
+        if a.layers is not None:
+            cfg = cfg.replace(n_layers=a.layers)
         print("wrote", train_e2(cfg, E2Config(), a.seed, Path(a.out), a.ckpt_every, label=a.label))
         return 0
 

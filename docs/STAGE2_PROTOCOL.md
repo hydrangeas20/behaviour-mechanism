@@ -44,3 +44,23 @@ A later rise in one curve than another is not by itself evidence of a developmen
 For each mechanism curve the report must say whether the change is in the defined fraction
 (the model's outputs on the probe inputs) or in the conditional effect (the causal profile
 given a defined gap), and whether it survives a change of corruption.
+
+## Amendment 1 (outcome-informed; written at step ~3,500 of the declared runs)
+
+Both declared runs sit on a plateau at steps 2,000–3,500: in-distribution accuracy
+0.15–0.18 and held-out-length accuracy 0.02–0.05. That pattern is what a mixture of
+positional copiers would produce, not token matching. The declared runs continue to
+8,000 steps unchanged.
+
+Because the declared runs may end without learning the task, one contingency run is added
+**after seeing these interim results**:
+
+| Run | Model | Optimiser | Steps | Seed | Role |
+|---|---|---|---|---|---|
+| `e2_2layer_lr1e-3_s0` | 2 layers, otherwise historical (4 heads, d_model 128, MLPs kept) | AdamW, peak lr 1e-3, warmup 100, cosine to 0 | 12,000 | 0 | contingency, outcome-informed |
+
+The roadmap's E2 sketch names a two-layer variant; choosing it, the learning rate and the
+longer schedule now is a decision made with knowledge of the interim results. Anything
+found with this run is exploratory in a stronger sense than the declared runs, and the
+report must say so. The "learns the task" rule (final in-distribution accuracy of at least
+0.90) is unchanged.
