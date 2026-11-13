@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "behaviour-mechanism"
+version = "0.2.0"
+description = "Behavioural vs activation-patching measurements of a copying capability during small-transformer training"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "hydrangeas20", email = "hamda@duck.com" }]
+dependencies = [
+    "jax>=0.4.30",
+    "flax>=0.10",
+    "optax>=0.2",
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.10", "pandas-stubs"]
+
+[project.scripts]
+bm = "behaviour_mechanism.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: trains a model for a few hundred steps on CPU (about 1 minute)"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "NPY", "RUF"]
+ignore = ["E741", "RUF001", "RUF002", "RUF003"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+files = ["src"]

@@ -9,3 +9,10 @@ __pycache__/
 
 # OS files
 .DS_Store
+artifacts/
+
+# Build and tool caches
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
