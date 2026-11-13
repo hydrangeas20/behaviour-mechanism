@@ -178,6 +178,20 @@ def predict_bigram(tokens: np.ndarray, table: np.ndarray) -> np.ndarray:
     return pred
 
 
+def predict_offset_by_position(tokens: np.ndarray, offset_table: np.ndarray) -> np.ndarray:
+    """Positional mixture shortcut: for target position ``p`` copy ``tokens[p - k_p]``,
+    where ``k_p = offset_table[p]`` is the chunk length most often responsible for a scored
+    target at ``p`` in training data. It uses position only to choose the offset and never
+    compares tokens."""
+    b, t = tokens.shape
+    pred = np.full((b, t - 1), -1)
+    for p_ in range(1, t):
+        k = int(offset_table[p_])
+        if 0 < k <= p_:
+            pred[:, p_ - 1] = tokens[:, p_ - k]
+    return pred
+
+
 def predict_previous_token(tokens: np.ndarray) -> np.ndarray:
     return tokens[:, :-1].copy()
 
@@ -227,8 +241,12 @@ def fit_tables(e2: E2Config, n_batches: int = 200, batch_size: int = 64) -> dict
     uni = np.zeros(v, dtype=np.int64)
     pos = np.zeros((t, v), dtype=np.int64)
     big = np.zeros((v, v), dtype=np.int64)
+    off = np.zeros((t, t), dtype=np.int64)  # off[p, k]: scored targets at p with length k
     for step in range(n_batches):
-        tok = make_batch(split_rng(e2, "train", step), e2, batch_size).tokens
+        batch = make_batch(split_rng(e2, "train", step), e2, batch_size)
+        tok = batch.tokens
+        rows_, cols_ = np.nonzero(batch.scored)
+        np.add.at(off, (cols_, batch.length[rows_]), 1)
         uni += np.bincount(tok.ravel(), minlength=v)
         for p in range(t):
             pos[p] += np.bincount(tok[:, p], minlength=v)
@@ -237,6 +255,7 @@ def fit_tables(e2: E2Config, n_batches: int = 200, batch_size: int = 64) -> dict
         "unigram_token": int(uni.argmax()),
         "position_table": pos.argmax(axis=1),
         "bigram_table": big.argmax(axis=1),
+        "offset_table": off.argmax(axis=1),
         "n_sequences": n_batches * batch_size,
     }
 
@@ -292,6 +311,12 @@ def baseline_table(
             f"fixed-offset copy, best single offset ({best_k})",
             "shortcut",
             fixed[best_k],
+        ),
+        (
+            "offset_by_position",
+            "positional mixture: most likely offset per position",
+            "shortcut",
+            accuracy(predict_offset_by_position(tok, tables["offset_table"]), batch),
         ),
         (
             "reference_a",

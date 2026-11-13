@@ -190,3 +190,13 @@ def test_cli_e2_train_smoke(tmp_path, tiny_cfg):
     assert set(man["checkpoint_sha256"]) == {"step_0.npz", "step_2.npz", "step_4.npz"}
     with pytest.raises(FileExistsError):
         main(["e2-train", "--config", str(cfg_path), "--seed", "0", "--out", str(out)])
+
+
+def test_positional_mixture_shortcut_is_bounded_and_fails_on_unseen_lengths():
+    tables = E.fit_tables(E2, n_batches=40)
+    ind = E.make_batch(E.split_rng(E2, "test", 0), E2, 600, frac_repeat=1.0)
+    held = E.make_batch(E.split_rng(E2, "test", 1), E2, 600, E2.heldout_lengths, 1.0)
+    a_in = E.accuracy(E.predict_offset_by_position(ind.tokens, tables["offset_table"]), ind)
+    a_held = E.accuracy(E.predict_offset_by_position(held.tokens, tables["offset_table"]), held)
+    assert 0.08 < a_in < 0.25  # better than chance: a shortcut that E2 does not remove
+    assert a_held < 0.03  # but it cannot transfer to chunk lengths it never saw

@@ -26,8 +26,21 @@ package that reproduces the measurement pipeline, and CPU diagnostic re-runs.
 
 ## Research question
 
-When a behavioural score and a causal mechanistic probe track the same learned capability
-across training, do they agree about *when* the capability has stabilised?
+**Revised (methodological) question:** can measurement artifacts produce an apparent
+delay between behavioural competence and mechanistic emergence?
+
+This replaces the original question, which the audit showed the original experiment could
+not answer. The table separates what was asked, what was measured, and where things stand.
+
+| | |
+|---|---|
+| **Original hypothesis** | Behavioural and mechanistic measurements of one capability stabilise at different training steps (H1: T_b ≠ T_m), tested with "induction" on a synthetic repeat task. |
+| **What the original experiment measured** | Behaviour: argmax accuracy on clean repeats at a fixed offset of 32. "Mechanism": a zero-filled, max-over-layers attention-patching statistic on 8 pairs, with a corruption that replaces the whole second half. |
+| **What the audit invalidated** | (1) "Induction": the task is solved by fixed-offset copying. (2) The statistic as a measure of mechanism: it mostly counts probe pairs with a defined output gap, and it reads 0 for a hand-built MLP-gated copier. (3) "Behaviour stabilises before mechanism": the late rise tracks a second *behavioural* change. |
+| **What remains uncertain** | Whether any behaviour–mechanism lag exists on a task that requires token matching; where the trained fixed-offset models compute their gate; whether post-gating internal changes are reorganisation or sharpening. |
+| **Current evidence on the revised question** | Yes for the original experiment: its apparent 1,700–2,200-step delay is reproduced by artifacts of the metric and the task. Stage 2 (below) is an exploratory attempt on an offset-randomised task. |
+
+Evidence for each row is indexed in [`docs/EVIDENCE_INVENTORY.md`](docs/EVIDENCE_INVENTORY.md).
 
 ## Motivation
 
@@ -44,6 +57,11 @@ knowing what each measurement actually measures.
   statistic's late rise coincides, seed by seed, with the model learning to *stop
   copying* on non-repeating sequences, a behavioural change that the original
   behavioural metric does not measure.
+- **Competing hypotheses for any apparent lag (Stage 2):**
+  - *artifact*: the lag is in the defined fraction (model outputs on probe inputs) or
+    depends on the corruption or site chosen;
+  - *developmental*: the conditional causal profile itself changes after behaviour has
+    stabilised, under several corruptions.
 
 ## Experimental setup
 
