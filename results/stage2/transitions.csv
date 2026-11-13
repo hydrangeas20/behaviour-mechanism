@@ -1,0 +1,3 @@
+run,in_dist_acc>=0.9,heldout_acc>=0.9,legacy[earlier_occurrence]>=0.8,defined[earlier_occurrence]>=0.95,legacy[copy_source]>=0.8,defined[copy_source]>=0.95,legacy[query_token]>=0.8,defined[query_token]>=0.95,legacy[random_repeat]>=0.8,defined[random_repeat]>=0.95
+e2_lr1e-3_s0,4750.0,4750.0,4500.0,4250.0,500,500,5500.0,4500.0,7500.0,3750.0
+e2_main_lr3e-4_s0,,,,,750,750,,,,

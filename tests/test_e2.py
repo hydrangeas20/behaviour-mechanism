@@ -200,3 +200,54 @@ def test_positional_mixture_shortcut_is_bounded_and_fails_on_unseen_lengths():
     a_held = E.accuracy(E.predict_offset_by_position(held.tokens, tables["offset_table"]), held)
     assert 0.08 < a_in < 0.25  # better than chance: a shortcut that E2 does not remove
     assert a_held < 0.03  # but it cannot transfer to chunk lengths it never saw
+
+
+# ------------------------------------------------- recorded Stage 2 results (saved artifacts)
+
+
+def _beh(repo, run):
+    import pandas as pd
+
+    rows = [json.loads(x) for x in (repo / f"results/stage2/{run}/behaviour.jsonl").open()]
+    return pd.DataFrame(rows).set_index("step")
+
+
+def test_recorded_stage2_results(repo):
+    import pandas as pd
+
+    cal = json.loads((repo / "results/stage2/calibration/summary.json").read_text())
+    assert cal["distinct"]["passed"] == cal["distinct"]["cells"] == 80
+    base = pd.read_csv(repo / "results/stage2/baselines/baselines.csv")
+    base = base[base.test_set == "in_dist"].set_index("label").accuracy
+    assert base["fixed_offset_historical"] < 0.02 and base["reference_b"] > 0.98
+    leak = json.loads((repo / "results/stage2/baselines/leakage.json").read_text())
+    assert leak["eval_sequences_also_in_train"] == leak["eval_chunks_also_in_train"] == 0
+    assert leak["heldout_lengths_in_train"] == []
+
+    learned, plateau = _beh(repo, "e2_lr1e-3_s0"), _beh(repo, "e2_main_lr3e-4_s0")
+    # the run that learned the task generalises to chunk lengths it never saw
+    assert learned.in_dist_acc.iloc[-1] > 0.98 and learned.heldout_acc.iloc[-1] > 0.98
+    # the primary run stayed near the positional-mixture shortcut level
+    assert plateau.in_dist_acc.iloc[-1] < 0.3 and plateau.heldout_acc.iloc[-1] < 0.1
+    assert plateau.in_dist_acc.iloc[-1] > 3 * plateau.heldout_acc.iloc[-1]
+
+    # the legacy statistic is near ceiling in a model that never learned the task
+    leg = pd.read_csv(repo / "results/stage2/e2_main_lr3e-4_s0/legacy_statistic.csv")
+    cs = leg[(leg.corruption == "copy_source") & (leg.step >= 750)]
+    assert cs.legacy_patch_effect_size_v1.min() > 0.9
+
+    # no result row silently zero-fills: undefined + defined = attempted everywhere
+    for run in ("e2_lr1e-3_s0", "e2_main_lr3e-4_s0"):
+        m = pd.read_csv(repo / f"results/stage2/{run}/mechanism.csv")
+        assert (m.n_defined + m.n_undefined == m.n_attempted).all()
+        assert (m.metric_version == "bm-patch-2").all()
+        assert m[m.n_defined == 0].conditional_effect_mean.isna().all()
+
+
+def test_settled_step_helper():
+    from behaviour_mechanism.e2_figures import first_sustained, settled_step
+
+    assert settled_step([0, 1, 2, 3], [0.0, 0.9, 0.5, 0.52]) == 2
+    assert settled_step([0, 1], [0.5, 0.5]) == 0
+    assert first_sustained([0, 1, 2, 3], [0.1, 0.9, 0.2, 0.95], 0.8) is None
+    assert first_sustained([0, 1, 2, 3], [0.1, 0.9, 0.85, 0.95], 0.8) == 1

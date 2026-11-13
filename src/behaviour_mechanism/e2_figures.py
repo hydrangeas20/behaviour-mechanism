@@ -41,6 +41,62 @@ def first_sustained(
     return None
 
 
+def settled_step(steps: list[int], values: list[float], tol: float = 0.05) -> int | None:
+    """First checkpoint from which every later value stays within ``tol`` of the final
+    value. Descriptive only: it depends on ``tol`` and on the checkpoint grid."""
+    final = values[-1]
+    for i in range(len(steps)):
+        if all(v == v and abs(v - final) <= tol for v in values[i:]):
+            return int(steps[i])
+    return None
+
+
+def settling_table(run: Path) -> pd.DataFrame:
+    b = _behaviour(run)
+    mech = pd.read_csv(run / "mechanism.csv")
+    leg = pd.read_csv(run / "legacy_statistic.csv")
+    steps = b.step.tolist()
+    rows: list[dict[str, object]] = []
+
+    def add(kind: str, name: str, st: list[int], vals: list[float]) -> None:
+        rows.append(
+            {
+                "kind": kind,
+                "quantity": name,
+                "final_value": round(vals[-1], 3),
+                "settled_step": settled_step(st, vals),
+            }
+        )
+
+    for col in ("in_dist_acc", "heldout_acc", "extrapolation_acc", "gap8_acc"):
+        add("behaviour", col, steps, b[col].tolist())
+    for d in ("1", "2-3"):
+        add(
+            "behaviour",
+            f"in_dist_acc_depth_{d}",
+            steps,
+            [x[d] for x in b.in_dist_acc_by_depth.tolist()],
+        )
+    for corr in CORRUPTION_LABEL:
+        g = leg[leg.corruption == corr].sort_values("step")
+        add("legacy", f"legacy|{corr}", g.step.tolist(), g.legacy_patch_effect_size_v1.tolist())
+        add(
+            "defined_fraction",
+            f"defined|{corr}",
+            g.step.tolist(),
+            (g.n_defined / g.n_attempted).tolist(),
+        )
+    m = mech[mech.component.isin(["attn_out", "mlp_out"])]
+    for key, g in m.groupby(["corruption", "site", "direction"]):
+        corr, site, direction = (str(k) for k in key)
+        g = g.sort_values("step")
+        vals = g.conditional_effect_mean.tolist()
+        if any(v != v for v in vals):
+            continue
+        add(f"conditional_{direction}", f"{corr}|{site}", g.step.tolist(), vals)
+    return pd.DataFrame(rows)
+
+
 def e2_report(repo: Path) -> list[Path]:
     stage2 = repo / "results" / "stage2"
     runs = _runs(stage2)
@@ -150,7 +206,7 @@ def e2_report(repo: Path) -> list[Path]:
             ax.set_ylabel(f"Denoising effect | defined\n({CORRUPTION_LABEL[corr]})")
         for ax in axes:
             ax.set_ylim(-0.3, 1.3) if ax in (axes[3], axes[4]) else ax.set_ylim(-0.05, 1.08)
-            ax.legend(fontsize=7, frameon=False, loc="center right", ncol=1)
+            ax.legend(fontsize=7, frameon=False, loc="upper left", bbox_to_anchor=(1.005, 1.0))
             _style(ax)
         axes[-1].set_xlabel("Training step")
         fig.suptitle(
@@ -158,6 +214,9 @@ def e2_report(repo: Path) -> list[Path]:
         )
         out.append(_save(fig, fig_dir / f"e2_mechanism_{run.name}.png"))
 
+        sp = stage2 / f"settling_{run.name}.csv"
+        settling_table(run).to_csv(sp, index=False)
+        out.append(sp)
         steps = b.step.tolist()
         row = {
             "run": run.name,

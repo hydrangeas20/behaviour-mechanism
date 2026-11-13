@@ -1,0 +1,26 @@
+{
+  "generator_version": "e2-v1",
+  "n_eval_sequences": 12000,
+  "n_train_sequences": 512000,
+  "train_steps_checked": 8000,
+  "duplicate_train_sequences": 0,
+  "eval_sequences_also_in_train": 0,
+  "eval_chunks_also_in_train": 0,
+  "train_lengths_seen": [
+    8,
+    9,
+    10,
+    12,
+    13,
+    14,
+    15,
+    16,
+    18,
+    19,
+    20,
+    21,
+    23,
+    24
+  ],
+  "heldout_lengths_in_train": []
+}
