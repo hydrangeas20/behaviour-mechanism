@@ -89,6 +89,35 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--n-pairs", type=int, default=128)
     p.add_argument("--pair-seed", type=int, default=0)
 
+    p = sub.add_parser("stage1-controls", help="Stage 1 positive controls (bm-patch-2)")
+    p.add_argument("--out", default="results/stage1/positive_controls")
+    p.add_argument("--n-pairs", type=int, default=64)
+    p.add_argument("--pair-seed", type=int, default=0)
+
+    p = sub.add_parser("e2-train", help="Stage 2: train one model on the E2 task")
+    p.add_argument("--config", default="configs/config.json")
+    p.add_argument("--seed", type=int, required=True)
+    p.add_argument("--out", required=True)
+    p.add_argument("--lr", type=float, default=None, help="override the peak learning rate")
+    p.add_argument("--steps", type=int, default=None, help="override total_steps")
+    p.add_argument("--layers", type=int, default=None, help="override n_layers")
+    p.add_argument("--ckpt-every", type=int, default=250)
+    p.add_argument("--label", default="")
+
+    p = sub.add_parser("e2-baselines", help="Stage 2: shortcut baselines and leakage checks")
+    p.add_argument("--out", default="results/stage2/baselines")
+
+    p = sub.add_parser("e2-eval", help="Stage 2: behaviour + mechanism at saved checkpoints")
+    p.add_argument("--run", required=True, help="training run directory")
+    p.add_argument("--out", required=True)
+    p.add_argument("--n-pairs", type=int, default=128)
+
+    p = sub.add_parser("e2-calibrate", help="Stage 2: positive-control calibration")
+    p.add_argument("--out", default="results/stage2/calibration")
+
+    p = sub.add_parser("e2-report", help="Stage 2: figures and tables from saved results")
+    p.add_argument("--repo", default=None)
+
     p = sub.add_parser("controls-report")
     p.add_argument("--repo", default=None)
 
@@ -165,6 +194,55 @@ def main(argv: list[str] | None = None) -> int:
             load_config(a.config), Path(a.checkpoints), Path(a.out), a.n_pairs, a.pair_seed
         )
         print("wrote", path)
+        return 0
+
+    if a.cmd == "stage1-controls":
+        from .experiments import run_stage1_positive_controls
+
+        s1_out = run_stage1_positive_controls(Path(a.out), a.n_pairs, a.pair_seed)
+        summary = json.loads((s1_out / "summary.json").read_text())
+        print(f"{summary['passed']}/{summary['cells']} cells match predictions; wrote {s1_out}")
+        return 0 if summary["failed"] == 0 else 1
+
+    if a.cmd == "e2-train":
+        from .config import load_config
+        from .e2 import E2Config
+        from .e2_run import train_e2
+
+        cfg = load_config(a.config)
+        if a.lr is not None:
+            cfg = cfg.replace(learning_rate=a.lr)
+        if a.steps is not None:
+            cfg = cfg.replace(total_steps=a.steps)
+        if a.layers is not None:
+            cfg = cfg.replace(n_layers=a.layers)
+        print("wrote", train_e2(cfg, E2Config(), a.seed, Path(a.out), a.ckpt_every, label=a.label))
+        return 0
+
+    if a.cmd == "e2-baselines":
+        from .experiments import run_e2_baselines
+
+        print("wrote", run_e2_baselines(Path(a.out)))
+        return 0
+
+    if a.cmd == "e2-eval":
+        from .e2_eval import evaluate_run
+
+        print("wrote", evaluate_run(Path(a.run), Path(a.out), a.n_pairs))
+        return 0
+
+    if a.cmd == "e2-calibrate":
+        from .e2_eval import calibrate
+
+        cal = calibrate(Path(a.out))
+        print(json.dumps(json.loads((cal / "summary.json").read_text())["distinct"]))
+        return 0
+
+    if a.cmd == "e2-report":
+        from .e2_figures import e2_report
+
+        for path in e2_report(_repo(a.repo)):
+            print("wrote", path)
         return 0
 
     if a.cmd == "controls-report":

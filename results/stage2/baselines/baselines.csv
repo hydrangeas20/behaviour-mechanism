@@ -1,0 +1,31 @@
+test_set,n_sequences,label,predictor,kind,accuracy
+in_dist,2000,chance,chance (1 / vocab),shortcut,0.01
+in_dist,2000,token_frequency,token-frequency (most common token),shortcut,0.010578801967522405
+in_dist,2000,position_only,position-only (most common token per position),shortcut,0.009635469307998114
+in_dist,2000,bigram,bigram (most common successor),shortcut,0.010006064281382655
+in_dist,2000,previous_token,previous-token copy,shortcut,0.010208206994137861
+in_dist,2000,fixed_offset_historical,"fixed-offset copy, historical offset 32",shortcut,0.008489993935718617
+in_dist,2000,fixed_offset_best,"fixed-offset copy, best single offset (23)",shortcut,0.12371134020618557
+in_dist,2000,offset_by_position,positional mixture: most likely offset per position,shortcut,0.13573883161512026
+in_dist,2000,reference_a,reference A: last-occurrence induction,reference,0.849167845832491
+in_dist,2000,reference_b,reference B: longest-suffix induction,reference,0.9922848864631764
+heldout,2000,chance,chance (1 / vocab),shortcut,0.01
+heldout,2000,token_frequency,token-frequency (most common token),shortcut,0.010242414512762883
+heldout,2000,position_only,position-only (most common token per position),shortcut,0.010724032750040136
+heldout,2000,bigram,bigram (most common successor),shortcut,0.010049767217851982
+heldout,2000,previous_token,previous-token copy,shortcut,0.009439717450634131
+heldout,2000,fixed_offset_historical,"fixed-offset copy, historical offset 32",shortcut,0.007898539091346926
+heldout,2000,fixed_offset_best,"fixed-offset copy, best single offset (22)",shortcut,0.44071279499117033
+heldout,2000,offset_by_position,positional mixture: most likely offset per position,shortcut,0.010402953925188634
+heldout,2000,reference_a,reference A: last-occurrence induction,reference,0.8471664793706855
+heldout,2000,reference_b,reference B: longest-suffix induction,reference,0.990817145609247
+extrapolation,2000,chance,chance (1 / vocab),shortcut,0.01
+extrapolation,2000,token_frequency,token-frequency (most common token),shortcut,0.009708446948131723
+extrapolation,2000,position_only,position-only (most common token per position),shortcut,0.010068019057321787
+extrapolation,2000,bigram,bigram (most common successor),shortcut,0.009618553920834208
+extrapolation,2000,previous_token,previous-token copy,shortcut,0.009199053126779133
+extrapolation,2000,fixed_offset_historical,"fixed-offset copy, historical offset 32",shortcut,0.33982560752704283
+extrapolation,2000,fixed_offset_best,"fixed-offset copy, best single offset (32)",shortcut,0.33982560752704283
+extrapolation,2000,offset_by_position,positional mixture: most likely offset per position,shortcut,0.009828304317861745
+extrapolation,2000,reference_a,reference A: last-occurrence induction,reference,0.7724208192251221
+extrapolation,2000,reference_b,reference B: longest-suffix induction,reference,0.9914901267491685

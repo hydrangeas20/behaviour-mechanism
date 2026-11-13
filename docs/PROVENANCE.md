@@ -47,6 +47,11 @@ and are not in the repository.
 | `results/controls/e3_main_s{0,1}/` | `bm controls --checkpoints artifacts/checkpoints/main_s{0,1} --n-pairs 128` | `manifest.json` (commit `9c3c69e`, clean tree; sha256 of every input checkpoint); `checkpoints_manifest.json` (the training run that wrote the checkpoints, with per-checkpoint records) |
 | `artifacts/checkpoints/main_s{0,1}/step_*.npz` (**not committed**: 3.3 MB each; regenerate with `scripts/train_and_save_checkpoints.py`) | see README | sha256s recorded in the E3 manifests |
 | `figures/derived/e3_controls.png`, `results/controls/*/summary_wide.csv` | `bm controls-report` | derived from the E3 CSVs |
+| `results/stage1/positive_controls/` | `bm stage1-controls` | `manifest.json` (commit `1302798`, clean tree) |
+| `results/stage2/baselines/`, `results/stage2/calibration/` | `bm e2-baselines`, `bm e2-calibrate` | `manifest.json` in each (clean tree) |
+| `results/stage2/e2_main_lr3e-4_s0/`, `results/stage2/e2_lr1e-3_s0/` | `bm e2-train …` then `bm e2-eval …` | `training_manifest.json` (commit `499566d`, clean tree; sha256 of all 33 checkpoints; runtime) and `manifest.json` (evaluation) |
+| `results/stage2/e2_2layer_lr1e-3_s0/` | `bm e2-train --layers 2 --lr 1e-3 --steps 12000` | incomplete: stopped by hand at about step 5,000, so its manifest still says `running` |
+| `figures/stage2/`, `results/stage2/transitions.csv`, `settling_*.csv` | `bm e2-report` | derived from the saved Stage 2 results |
 
 The diagnostic runs were produced from a working tree with uncommitted changes, so their
 manifests record `dirty: true` and the parent commit `3fbc2bf`. The committed package
