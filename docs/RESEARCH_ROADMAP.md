@@ -7,7 +7,10 @@
 - **E1:** infrastructure implemented and tested. The pre-registration is drafted in
   [E1_PREREGISTRATION.md](E1_PREREGISTRATION.md). The 8-seed run has **not** been run and
   awaits approval.
-- **E2, E5, E6:** not started.
+- **E2:** task, baselines and an **exploratory** run are done (Stage 2; one seed per
+  configuration; see [STAGE2_REPORT.md](STAGE2_REPORT.md)). The 8-seed confirmatory study,
+  the two-layer attention-only variant and the no-repeat control have **not** been run.
+- **E5, E6:** not started.
 
 None of the experiments below has been run unless it says so. "CPU diagnostic" means the
 small re-runs in `results/diagnostics/` (see [RESEARCH_AUDIT.md](RESEARCH_AUDIT.md) §C).
@@ -92,7 +95,18 @@ GPU estimates are **unverified**.
     about the choice of behavioural metric.
 13. **Limitations.** Same small model and synthetic task.
 
-## E2. Offset-randomised task (implements the unused `induction_gap_*` fields)
+## E2. Offset-randomised task — exploratory run DONE; confirmatory study NOT RUN
+
+Exploratory findings (one seed; [STAGE2_REPORT.md](STAGE2_REPORT.md)):
+- The historical shortcut is at chance on E2; a positional-mixture shortcut worth 0.136
+  remains.
+- The lr 3e-4 configuration did not learn the task in 8,000 steps; lr 1e-3 did.
+- Under the legacy statistic, the apparent lag ranges from −4,250 to +2,750 steps
+  depending on the corruption.
+- No behaviour–mechanism lag is resolved at a 250-step checkpoint grid.
+
+The confirmatory design in §10 of the report supersedes points 9–11 below. The original
+design notes follow.
 
 1. **Question.** When positional copying cannot solve the task, do accuracy and patching
    still saturate at different times?

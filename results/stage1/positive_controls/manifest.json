@@ -1,0 +1,62 @@
+{
+  "command": [
+    "/usr/local/bin/bm",
+    "stage1-controls"
+  ],
+  "corruptions": [
+    "query_token",
+    "earlier_occurrence",
+    "copy_source",
+    "random_second_half"
+  ],
+  "created_utc": "2026-11-13T04:55:33+00:00",
+  "git": {
+    "branch": "research/mvp-stage1-2",
+    "commit": "130279848206bf2f8cfc58f648a7625987b47b41",
+    "dirty": false
+  },
+  "hardware": {
+    "cpu_count": 2,
+    "jax_backend": "cpu",
+    "jax_devices": [
+      "cpu:0"
+    ],
+    "machine": "x86_64",
+    "platform": "Linux-6.18.44-fc-v445-x86_64-with-glibc2.39",
+    "processor": "x86_64"
+  },
+  "kind": "stage1_positive_controls",
+  "metric_version": "bm-patch-2",
+  "models": [
+    "ungated",
+    "mlp_gate",
+    "attn_gate"
+  ],
+  "n_pairs": 64,
+  "pair_seed": 0,
+  "sites": [
+    "attn_out.L0",
+    "attn_out.L1",
+    "head_out.L0H0",
+    "head_out.L0H1",
+    "mlp_out.L0",
+    "mlp_out.L1",
+    "resid_post.L0",
+    "resid_post.L1"
+  ],
+  "software": {
+    "flax": "0.12.12",
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "matplotlib": "3.11.2",
+    "numpy": "2.5.3",
+    "optax": "0.2.8",
+    "pandas": "3.0.5",
+    "python": "3.13.18"
+  },
+  "status": "complete",
+  "tolerance": {
+    "defined_fraction": 0.05,
+    "effect": 0.02
+  }
+}

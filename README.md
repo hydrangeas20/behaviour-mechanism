@@ -8,7 +8,9 @@ A small, fully inspectable study of how a behavioural metric and an activation-p
 metric of the same learned capability evolve during transformer training. The repository
 contains the original experiment (a JAX/Flax notebook, checkpoint-level CSVs, a
 preprint), an audit of what those artifacts do and do not establish, a tested Python
-package that reproduces the measurement pipeline, and CPU diagnostic re-runs.
+package that reproduces the measurement pipeline, CPU diagnostic re-runs, a corrected
+patching measurement validated on hand-built models, and an exploratory experiment on an
+offset-randomised task.
 
 > **The original interpretation has been revised (November 2026 audit).**
 > The September 2026 preprint and the original notebook are kept unchanged as historical
@@ -26,8 +28,21 @@ package that reproduces the measurement pipeline, and CPU diagnostic re-runs.
 
 ## Research question
 
-When a behavioural score and a causal mechanistic probe track the same learned capability
-across training, do they agree about *when* the capability has stabilised?
+**Revised (methodological) question:** can measurement artifacts produce an apparent
+delay between behavioural competence and mechanistic emergence?
+
+This replaces the original question, which the audit showed the original experiment could
+not answer. The table separates what was asked, what was measured, and where things stand.
+
+| | |
+|---|---|
+| **Original hypothesis** | Behavioural and mechanistic measurements of one capability stabilise at different training steps (H1: T_b ≠ T_m), tested with "induction" on a synthetic repeat task. |
+| **What the original experiment measured** | Behaviour: argmax accuracy on clean repeats at a fixed offset of 32. "Mechanism": a zero-filled, max-over-layers attention-patching statistic on 8 pairs, with a corruption that replaces the whole second half. |
+| **What the audit invalidated** | (1) "Induction": the task is solved by fixed-offset copying. (2) The statistic as a measure of mechanism: it mostly counts probe pairs with a defined output gap, and it reads 0 for a hand-built MLP-gated copier. (3) "Behaviour stabilises before mechanism": the late rise tracks a second *behavioural* change. |
+| **What remains uncertain** | Whether any behaviour–mechanism lag exists on a task that requires token matching; where the trained fixed-offset models compute their gate; whether post-gating internal changes are reorganisation or sharpening. |
+| **Current evidence on the revised question** | Yes for the original experiment: its apparent 1,700–2,200-step delay is reproduced by artifacts of the metric and the task. Stage 2 (below) is an exploratory attempt on an offset-randomised task. |
+
+Evidence for each row is indexed in [`docs/EVIDENCE_INVENTORY.md`](docs/EVIDENCE_INVENTORY.md).
 
 ## Motivation
 
@@ -44,6 +59,11 @@ knowing what each measurement actually measures.
   statistic's late rise coincides, seed by seed, with the model learning to *stop
   copying* on non-repeating sequences, a behavioural change that the original
   behavioural metric does not measure.
+- **Competing hypotheses for any apparent lag (Stage 2):**
+  - *artifact*: the lag is in the defined fraction (model outputs on probe inputs) or
+    depends on the corruption or site chosen;
+  - *developmental*: the conditional causal profile itself changes after behaviour has
+    stabilised, under several corruptions.
 
 ## Experimental setup
 
@@ -143,6 +163,18 @@ Details and evidence paths are in the audit.
 
 *E3 controls on saved checkpoints of the CPU re-runs (`results/controls/`).*
 
+8. **Stage 1: why the statistic failed, and a corrected measurement.**
+   - The failure on the MLP-gated copier is not an arithmetic bug. The clean and corrupted
+     runs have identical attention outputs there, so restoring them cannot recover
+     anything. The original corruption changes the query token, which reaches that
+     model's gate through the residual stream and an MLP.
+   - The corrected measurement (`bm-patch-2`) reports attempted, defined and undefined
+     pairs, the defined fraction, and the effect conditional on defined pairs, per site,
+     direction and corruption. Undefined is `None`, never 0.
+   - It matches hand-derived predictions in 192/192 cells on three fixed-offset copiers and
+     in 80/80 cells on a hand-built induction model. Method and limits:
+     [`docs/METRIC_METHODOLOGY.md`](docs/METRIC_METHODOLOGY.md).
+
 <p align="center">
   <img src="figures/derived/historical_trajectories.png" width="640"
        alt="Historical accuracy, patching statistic and raw loss for four seeds">
@@ -161,7 +193,51 @@ of 64 pairs with a defined gap; recovery among defined pairs; log-probability of
 half-back token on non-repeating sequences (dashed = uniform); accuracy on repeats at an
 untrained offset.*
 
+## Stage 2: exploratory experiment on an offset-randomised task
+
+**Exploratory, one seed per configuration. Not the pre-registered eight-seed study.**
+Full report: [`docs/STAGE2_REPORT.md`](docs/STAGE2_REPORT.md).
+
+The E2 task repeats a chunk of random length (8–24) at a random position, so no constant
+offset works. Three chunk lengths are held out of training.
+
+| | Result |
+|---|---|
+| Original fixed-offset shortcut on E2 | 0.009 accuracy (chance 0.010) |
+| Position-only, frequency, bigram baselines | 0.010–0.011 |
+| Remaining shortcut: positional mixture | 0.136 on trained lengths, 0.010 on held-out lengths |
+| Rule-based reference solution | 0.992 |
+| Declared primary run (lr 3e-4, 8,000 steps) | **did not learn the task**: 0.212 trained lengths, 0.070 held-out |
+| Declared secondary run (lr 1e-3) | learned it between steps 4,250 and 4,500: 0.992 trained, 0.991 held-out |
+
+What the mechanism measurements show, in the run that learned the task:
+
+- Read with the original pipeline (legacy statistic ≥ 0.8), "mechanism" appears 2,750
+  steps *after* behaviour under the original corruption's analogue, 250 steps *before* it
+  under an earlier-occurrence corruption, and 4,250 steps before it under a copy-source
+  corruption. Same model, same checkpoints.
+- In the run that never learned the task, the legacy statistic is 0.94–1.01 from step 750
+  to the end. It is detecting a positional copy pathway in layer 0.
+- With the corrected measurement, the causal profile and behaviour change in the same
+  250-step interval. Mediation moves from layer-0 attention to layers 1 and 3.
+
+**Verdict.** For the legacy pipeline, the evidence supports the artifact reading:
+measurement choices can produce an apparent delay, or an apparent lead. For a genuine
+developmental lag on an induction-requiring task, the evidence is insufficient to
+distinguish the hypotheses: one seed, a 250-step checkpoint grid, and slow drift that
+appears in behaviour as well as in the causal profile.
+
+<p align="center">
+  <img src="figures/stage2/e2_mechanism_e2_lr1e-3_s0.png" width="620"
+       alt="E2 secondary run: accuracy, legacy statistic, defined fraction and conditional denoising effects by corruption">
+</p>
+
+*E2 secondary run (`results/stage2/e2_lr1e-3_s0/`), 128 fixed pairs per corruption.*
+
 ## Interpretation
+
+The paragraphs below concern the **historical fixed-offset experiment**. Stage 2 has its
+own interpretation in the report.
 
 The original separation is real as a statement about two *numbers*. Once each number is
 decomposed, the evidence supports a different account:
@@ -219,7 +295,7 @@ Measured on a 2-vCPU Linux x86-64 workspace (Python 3.13, JAX 0.12 CPU).
 
 ```sh
 pip install -e ".[dev]"
-pytest -q                          # 40 tests, about 75 s
+pytest -q                          # 82 tests, about 70 s
 bm verify-artifacts --strict       # checks + derived tables from results/*.csv, seconds
 bm figures                         # figures/derived/ from the CSVs
 bm diagnose --seed 0 --stop-at 3000 --out results/diagnostics/my_run    # about 25 min on CPU
@@ -229,7 +305,12 @@ python scripts/train_and_save_checkpoints.py --seed 0 --stop-at 3000 \
     --steps 300,500,1000,1200,1300,1500,2000,3000        # about 20 min; artifacts/checkpoints/
 bm controls --checkpoints artifacts/checkpoints/main_s0 --out results/controls/my_e3   # about 2 min
 bm controls-report
+bm stage1-controls --out results/stage1/my_positive_controls   # Stage 1, about 1 min
+bm e2-report                       # Stage 2 figures and tables from saved results, seconds
 ```
+
+Stage 2 training and evaluation commands are in
+[`docs/STAGE2_REPORT.md`](docs/STAGE2_REPORT.md) §11.
 
 | Level | What you can do | Cost |
 |---|---|---|
@@ -248,16 +329,20 @@ metrics, same patching values).
 ```text
 assets/          header image
 configs/         config.json — the historical main-run configuration
-docs/            RESEARCH_AUDIT, RESEARCH_ROADMAP, UPGRADE_HANDOFF, PROVENANCE,
+docs/            EVIDENCE_INVENTORY, RESEARCH_AUDIT, METRIC_METHODOLOGY (Stage 1),
+                 STAGE2_PROTOCOL, STAGE2_REPORT, RESEARCH_ROADMAP, UPGRADE_HANDOFF, PROVENANCE,
                  PROPOSED_CORRECTION (draft), E1_PREREGISTRATION (draft)
 figures/         historical figures (unchanged); figures/derived/ regenerated + new
 notebooks/       behaviour_vs_mechanism.ipynb — historical, unchanged
 paper/           behaviour_mechanism_preprint.pdf — September 2026, predates the audit
 results/         historical CSVs (unchanged); derived/ checks; diagnostics/ CPU re-runs;
-                 controls/ E3 and E4 results — all with manifests
+                 controls/ E3 and E4; stage1/ positive controls; stage2/ E2 runs,
+                 baselines and calibration — all with manifests
 scripts/         train_and_save_checkpoints.py (inputs for E3)
 src/behaviour_mechanism/  config, data, model, training, patching, probes, stability,
                  controls (E3), constructed (E4), checkpoints, experiments,
+                 measurement (bm-patch-2), positive_controls, constructed_induction,
+                 e2, e2_run, e2_eval, e2_figures,
                  artifacts, figures, diagnose, provenance, cli
 tests/           unit and regression tests (incl. exact matches to notebook outputs)
 ```
@@ -268,12 +353,15 @@ tests/           unit and regression tests (incl. exact matches to notebook outp
 - the original experiment (2026-09);
 - this audit and the CPU diagnostics;
 - E4 (constructed weights);
-- E3 on 2 seeds.
+- E3 on 2 seeds;
+- Stage 1: corrected measurement and positive controls;
+- Stage 2: E2 task, baselines, and an exploratory run (one seed per configuration).
 
 **Next, not yet run** (details in [`docs/RESEARCH_ROADMAP.md`](docs/RESEARCH_ROADMAP.md)):
-1. E1, the pre-registered 8-seed re-measurement. Its fixed-probe and dense-checkpoint
-   infrastructure is implemented and tested; the run awaits approval.
-2. E2, an offset-randomised task that actually requires induction.
+1. E2 confirmatory: 8 seeds, pre-registered, with dense checkpoints around the transition
+   ([Stage 2 report](docs/STAGE2_REPORT.md) §10).
+2. E1, the pre-registered 8-seed re-measurement of the historical setup. Its infrastructure
+   is implemented and tested; the run awaits approval.
 3. E3 extended to more seeds and checkpoints, folded into E1.
 
 ## AI safety relevance

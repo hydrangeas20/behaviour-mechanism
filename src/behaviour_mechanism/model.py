@@ -168,6 +168,9 @@ class Patch:
     head_out: dict[tuple[int, int], Array] = field(default_factory=dict)
     mlp_out: dict[int, Array] = field(default_factory=dict)
     resid_post: dict[int, tuple[int, Array]] = field(default_factory=dict)
+    # ``resid_post_masked[l] = (mask (B, T) bool, value (B, T, d_model))``: after layer ``l``
+    # replace the residual stream wherever ``mask`` is True (per-example positions).
+    resid_post_masked: dict[int, tuple[Array, Array]] = field(default_factory=dict)
 
 
 @dataclass
@@ -227,6 +230,9 @@ def forward(
         if patch is not None and i in patch.resid_post:
             rpos, rval = patch.resid_post[i]
             x = x.at[:, rpos].set(rval)
+        if patch is not None and i in patch.resid_post_masked:
+            rmask, rfull = patch.resid_post_masked[i]
+            x = jnp.where(rmask[..., None], rfull, x)
         if cache is not None:
             cache.resid_post[i] = x
     x = _layer_norm(params["ln_f"], x)

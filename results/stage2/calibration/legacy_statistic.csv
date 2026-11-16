@@ -1,0 +1,9 @@
+pairs,corruption,legacy_patch_effect_size_v1,layer_0,layer_1
+distinct,earlier_occurrence,1.0,1.0,1.0
+distinct,copy_source,1.0,0.0,1.0
+distinct,query_token,1.0,0.0,1.0
+distinct,random_repeat,1.0,0.0,1.0
+natural,earlier_occurrence,1.0076303047488244,1.0076303047488244,1.0
+natural,copy_source,1.0,-0.0021398847711004264,1.0
+natural,query_token,0.9765625,0.0,0.9765625
+natural,random_repeat,1.0,0.016713097361890965,1.0

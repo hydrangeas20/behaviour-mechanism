@@ -1,0 +1,115 @@
+{
+  "batch_size": 64,
+  "checkpoint_every": 250,
+  "command": [
+    "/usr/local/bin/bm",
+    "e2-train",
+    "--seed",
+    "0",
+    "--lr",
+    "1e-3",
+    "--layers",
+    "2",
+    "--steps",
+    "12000",
+    "--out",
+    "artifacts/e2/e2_2layer_lr1e-3_s0",
+    "--label",
+    "contingency (outcome-informed): 2 layers, lr 1e-3, 12000 steps"
+  ],
+  "created_utc": "2026-11-13T20:56:38+00:00",
+  "e2_config": {
+    "data_seed": 0,
+    "extrapolation_lengths": [
+      4,
+      5,
+      6,
+      28,
+      30,
+      32
+    ],
+    "frac_repeat": 0.7,
+    "generator_version": "e2-v1",
+    "heldout_lengths": [
+      11,
+      17,
+      22
+    ],
+    "len_max": 24,
+    "len_min": 8,
+    "seq_len": 64,
+    "vocab_size": 100
+  },
+  "experiment_id": "e2-de16ac4ea603-d0-s0",
+  "generator_version": "e2-v1",
+  "git": {
+    "branch": "research/mvp-stage1-2",
+    "commit": "0d53024371c5aaa140f971a29357beac68fe7058",
+    "dirty": false
+  },
+  "hardware": {
+    "cpu_count": 2,
+    "jax_backend": "cpu",
+    "jax_devices": [
+      "cpu:0"
+    ],
+    "machine": "x86_64",
+    "platform": "Linux-6.18.44-fc-v445-x86_64-with-glibc2.39",
+    "processor": "x86_64"
+  },
+  "kind": "e2_training",
+  "label": "contingency (outcome-informed): 2 layers, lr 1e-3, 12000 steps",
+  "model_config": {
+    "batch_size": 64,
+    "d_ff": 512,
+    "d_model": 128,
+    "dense_ckpt_every": 50,
+    "dense_ckpt_until": 1500,
+    "dropout_rate": 0.0,
+    "eval_batch_size": 64,
+    "eval_batches": 8,
+    "frac_induction_sequences": 0.7,
+    "induction_gap_max": 40,
+    "induction_gap_min": 2,
+    "learning_rate": 0.001,
+    "max_seq_len": 64,
+    "n_heads": 4,
+    "n_layers": 2,
+    "seeds": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "seq_len": 64,
+    "sparse_ckpt_every": 500,
+    "total_steps": 12000,
+    "vocab_size": 100,
+    "warmup_steps": 100,
+    "weight_decay": 0.01
+  },
+  "model_config_hash": "de16ac4ea603",
+  "n_params": 430692,
+  "n_val_sequences": 512,
+  "optimizer": {
+    "name": "adamw",
+    "peak_lr": 0.001,
+    "schedule": "linear warmup, cosine decay to 0 over total_steps",
+    "scored_position_loss_weight": 3.0,
+    "warmup_steps": 100,
+    "weight_decay": 0.01
+  },
+  "seed": 0,
+  "software": {
+    "flax": "0.12.12",
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "matplotlib": "3.11.2",
+    "numpy": "2.5.3",
+    "optax": "0.2.8",
+    "pandas": "3.0.5",
+    "python": "3.13.18"
+  },
+  "status": "running",
+  "total_steps": 12000
+}

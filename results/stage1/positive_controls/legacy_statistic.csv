@@ -1,0 +1,13 @@
+model,corruption,name,value,best_layer,per_layer
+ungated,query_token,legacy_patch_effect_size_v1,0.0,0,"[0.0, 0.0]"
+mlp_gate,query_token,legacy_patch_effect_size_v1,0.0,0,"[0.0, 0.0]"
+attn_gate,query_token,legacy_patch_effect_size_v1,1.0,0,"[1.0, 0.0]"
+ungated,earlier_occurrence,legacy_patch_effect_size_v1,0.0,0,"[0.0, 0.0]"
+mlp_gate,earlier_occurrence,legacy_patch_effect_size_v1,1.0,0,"[1.0, 0.0]"
+attn_gate,earlier_occurrence,legacy_patch_effect_size_v1,1.0,0,"[1.0, 0.0]"
+ungated,copy_source,legacy_patch_effect_size_v1,1.0,0,"[1.0, 0.0]"
+mlp_gate,copy_source,legacy_patch_effect_size_v1,1.0,0,"[1.0, 0.0]"
+attn_gate,copy_source,legacy_patch_effect_size_v1,1.0,0,"[1.0, 0.0]"
+ungated,random_second_half,legacy_patch_effect_size_v1,0.0,0,"[0.0, 0.0]"
+mlp_gate,random_second_half,legacy_patch_effect_size_v1,0.0,0,"[0.0, 0.0]"
+attn_gate,random_second_half,legacy_patch_effect_size_v1,1.0,0,"[1.0, 0.0]"

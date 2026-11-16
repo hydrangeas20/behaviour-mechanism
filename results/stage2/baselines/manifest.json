@@ -1,0 +1,57 @@
+{
+  "command": [
+    "/usr/local/bin/bm",
+    "e2-baselines"
+  ],
+  "created_utc": "2026-11-13T21:57:58+00:00",
+  "e2_config": {
+    "data_seed": 0,
+    "extrapolation_lengths": [
+      4,
+      5,
+      6,
+      28,
+      30,
+      32
+    ],
+    "frac_repeat": 0.7,
+    "generator_version": "e2-v1",
+    "heldout_lengths": [
+      11,
+      17,
+      22
+    ],
+    "len_max": 24,
+    "len_min": 8,
+    "seq_len": 64,
+    "vocab_size": 100
+  },
+  "git": {
+    "branch": "research/mvp-stage1-2",
+    "commit": "e23552439e656060321261098efa691bba39c5d9",
+    "dirty": false
+  },
+  "hardware": {
+    "cpu_count": 2,
+    "jax_backend": "cpu",
+    "jax_devices": [
+      "cpu:0"
+    ],
+    "machine": "x86_64",
+    "platform": "Linux-6.18.44-fc-v445-x86_64-with-glibc2.39",
+    "processor": "x86_64"
+  },
+  "kind": "e2_baselines",
+  "n_test": 2000,
+  "software": {
+    "flax": "0.12.12",
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "matplotlib": "3.11.2",
+    "numpy": "2.5.3",
+    "optax": "0.2.8",
+    "pandas": "3.0.5",
+    "python": "3.13.18"
+  },
+  "status": "complete"
+}

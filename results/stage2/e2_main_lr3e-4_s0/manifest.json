@@ -1,0 +1,85 @@
+{
+  "checkpoints": {
+    "step_0.npz": "ab5acea4ba18ed3510885359557660a6dcf1801672e9dd6a2ff14906f08b68ec",
+    "step_1000.npz": "d10d8d475701306b7461c6c2548873fcd17eed4af5b4e577d2f1f2fd2dcbb73b",
+    "step_1250.npz": "27e42f98ded3e4be779c33ec9402e9ece48c5d38877129c445221cd47da6d23b",
+    "step_1500.npz": "597bf51e2a59426d2e4f28f4208458ec74372703e4e331097ae4a8dafa0a70b7",
+    "step_1750.npz": "fab75b277acef2d30dca63e1428701c2b2bb8c229900ee43f2f239a305ace855",
+    "step_2000.npz": "151e3b1d67bf2c8518c56dcc75cfd728c41d8c8afbe7091562c7c8cc52cd3549",
+    "step_2250.npz": "5672c3fdfa67e635ee484e85f1746242694d68ef8766d3042f2571d72575b405",
+    "step_250.npz": "cd7911de8e1ec7869834bd37d8b5e34e159815f2584814f0fd70ec95f1e1c357",
+    "step_2500.npz": "fea729a2810329e7a796ce2f1db95c4288f9577cf26012bb4c1c12a67c8140a0",
+    "step_2750.npz": "696f830ccde39b29b8cc43fc5dab6cf58d53b095e87415b89b220cb5d936e0a0",
+    "step_3000.npz": "393a65b55990c22eba435e4026da14d387ec0667329cc4d662b0e450bdd747a1",
+    "step_3250.npz": "66b875a18860876a3e7e74846e579146df82112959f17e00ba0e9d3e39dba31b",
+    "step_3500.npz": "0a54c6485e97eae97409b77492dc31ff1e61e8395bf448a757be3f23cfed9275",
+    "step_3750.npz": "417ba9e978d57e8593ad3572ef549eeb63d82dc421e809422cdd5d345bbf360c",
+    "step_4000.npz": "4ab76c1dbe9395e00675e020ae014f9ab629213511f45b05bb093cb283560c27",
+    "step_4250.npz": "6b392a94f7182fc2ce95e14061e067cabff3213d7131767b33eb852b8776e7f3",
+    "step_4500.npz": "1875d59aef60eafcca4ca0a37af41f815ff36000c257c32bac60ef8040af9c77",
+    "step_4750.npz": "41b03961544ec83f178748ee3cac3629a404f98637b890a1eab21962271848e2",
+    "step_500.npz": "cdfe16df07e8a594edd18763bc631167468e9f1f5dcd3771992f782adc6d9202",
+    "step_5000.npz": "baad2ca526b0f17cb4286672684a92ae45108a926c22cc565c328e7ede1d9479",
+    "step_5250.npz": "66c3727d8b8de83b2cd8b45cfba645036c4d1cddd29042bdc3c5d266e5efe495",
+    "step_5500.npz": "e922caef6cf88f7922bb1cd098a395a6a57c7e766211b7ca913a7b6a1e6436aa",
+    "step_5750.npz": "2faba32c6955f89f46b9ae7f03c513e448aebadb5b187a80fa77f813d71c07bb",
+    "step_6000.npz": "e36b47b12694e9758b2ddad18f795d6ec56f1541fb96be497d149febb9601d30",
+    "step_6250.npz": "0d535535167f0f4effcf78407df6486406e8c7e6d32d09cc7673fb8b03304ca2",
+    "step_6500.npz": "ec4c5c1259f44970799c3973c1aa996fc9ea1bed9ff4350b290efae5c2b9cf88",
+    "step_6750.npz": "8da66ac79cfb8f98acc23f15950a7f7a0da5e49e34a3730636c3de92d23525f2",
+    "step_7000.npz": "74918118e689d26db4d7a30f37c8a5405c6ce157793e7118371654e712c5ee64",
+    "step_7250.npz": "29c74f210e8673065a3223a5a46f25b8edc9ddd30a222fdcd4237a5da6e0b7c9",
+    "step_750.npz": "033a019b80452883c65a74709c79f0c9630bcc649c5ace9868ff142787708ff4",
+    "step_7500.npz": "96b7728b05ef9e168c324cc55f4e929ac638e0fe7da2ccd668b1c1f17545b533",
+    "step_7750.npz": "01fa70d185a791cdd30b03b64a906224307b436c6e599e955d36a3c4f1f73c6a",
+    "step_8000.npz": "c456dcd4365f817a04b5332d1b58e94933b50115c1612fb43c04dc1fd4b272b1"
+  },
+  "command": [
+    "/usr/local/bin/bm",
+    "e2-eval",
+    "--run",
+    "artifacts/e2/e2_main_lr3e-4_s0",
+    "--out",
+    "results/stage2/e2_main_lr3e-4_s0"
+  ],
+  "created_utc": "2026-11-13T22:17:11+00:00",
+  "git": {
+    "branch": "research/mvp-stage1-2",
+    "commit": "e23552439e656060321261098efa691bba39c5d9",
+    "dirty": false
+  },
+  "hardware": {
+    "cpu_count": 2,
+    "jax_backend": "cpu",
+    "jax_devices": [
+      "cpu:0"
+    ],
+    "machine": "x86_64",
+    "platform": "Linux-6.18.44-fc-v445-x86_64-with-glibc2.39",
+    "processor": "x86_64"
+  },
+  "kind": "e2_evaluation",
+  "metric_version": "bm-patch-2",
+  "n_pairs": 128,
+  "n_test_sequences": 512,
+  "pair_stream": "test split, index 100+corruption",
+  "run_dir": "e2_main_lr3e-4_s0",
+  "software": {
+    "flax": "0.12.12",
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "matplotlib": "3.11.2",
+    "numpy": "2.5.3",
+    "optax": "0.2.8",
+    "pandas": "3.0.5",
+    "python": "3.13.18"
+  },
+  "status": "complete",
+  "training_experiment_id": "e2-57c45749eb6d-d0-s0",
+  "training_git": {
+    "branch": "research/mvp-stage1-2",
+    "commit": "499566d33e583c97eb7c306b532d8f3c59d2802f",
+    "dirty": false
+  },
+  "training_seconds": 5391.6
+}
